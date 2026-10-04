@@ -1,0 +1,139 @@
+{
+  "mode": "normal-fixed-parent",
+  "runId": "run-2026-10-04T20-18-47-611Z-48028",
+  "electron": "43.7.5",
+  "events": [
+    {
+      "name": "window-created",
+      "at": "2026-10-04T20:18:47.691Z",
+      "visible": false,
+      "focused": false,
+      "contentSize": [
+        1152,
+        682
+      ]
+    },
+    {
+      "name": "guest-ready",
+      "at": "2026-10-04T20:18:47.909Z",
+      "width": 1152,
+      "height": 682,
+      "dpr": 1,
+      "scrollHeight": 2728,
+      "readyState": "complete"
+    },
+    {
+      "name": "cdp-start",
+      "at": "2026-10-04T20:18:47.909Z",
+      "method": "Page.getLayoutMetrics",
+      "params": {}
+    },
+    {
+      "name": "cdp-settled",
+      "at": "2026-10-04T20:18:47.910Z",
+      "method": "Page.getLayoutMetrics"
+    },
+    {
+      "name": "cdp-start",
+      "at": "2026-10-04T20:18:47.910Z",
+      "method": "Page.captureScreenshot",
+      "params": {
+        "format": "png",
+        "captureBeyondViewport": true,
+        "clip": {
+          "x": 0,
+          "y": 0,
+          "width": 1152,
+          "height": 2728,
+          "scale": 1
+        }
+      }
+    },
+    {
+      "name": "native-pulse-start",
+      "at": "2026-10-04T20:18:48.164Z",
+      "visible": false,
+      "focused": false,
+      "options": {
+        "stayHidden": true,
+        "stayAwake": false
+      }
+    },
+    {
+      "name": "native-pulse-settled",
+      "at": "2026-10-04T20:18:51.812Z",
+      "size": {
+        "width": 1152,
+        "height": 682
+      },
+      "empty": false
+    },
+    {
+      "name": "cdp-settled",
+      "at": "2026-10-04T20:18:51.957Z",
+      "method": "Page.captureScreenshot"
+    }
+  ],
+  "before": {
+    "width": 1152,
+    "height": 682,
+    "dpr": 1,
+    "scrollHeight": 2728,
+    "readyState": "complete"
+  },
+  "after": {
+    "width": 1152,
+    "height": 682,
+    "dpr": 1,
+    "scrollHeight": 2728,
+    "readyState": "complete"
+  },
+  "capture": {
+    "bytes": 14822,
+    "magic": "89504e470d0a1a0a",
+    "width": 1152,
+    "height": 2728,
+    "samples": [
+      {
+        "y": 341,
+        "rgba": [
+          216,
+          48,
+          48,
+          255
+        ]
+      },
+      {
+        "y": 1023,
+        "rgba": [
+          216,
+          48,
+          48,
+          255
+        ]
+      },
+      {
+        "y": 1705,
+        "rgba": [
+          216,
+          48,
+          48,
+          255
+        ]
+      },
+      {
+        "y": 2387,
+        "rgba": [
+          216,
+          48,
+          48,
+          255
+        ]
+      }
+    ]
+  },
+  "beforeClose": {
+    "visible": false,
+    "focused": false
+  }
+}

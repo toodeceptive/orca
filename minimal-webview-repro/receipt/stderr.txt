@@ -1,0 +1,1 @@
+Raw Electron stderr is retained only in the ignored runs output because it includes local filesystem paths. The final normal-mode run exited 0; Electron emitted non-fatal cache/profile-directory creation diagnostics. See privacy-review.json for the publication boundary.

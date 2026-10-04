@@ -1,0 +1,66 @@
+{
+  "schema": "portable-minimal-webview-repro-privacy-v2",
+  "reviewedUtc": "2026-10-04T20:19:55.4464533Z",
+  "allowlist": [
+    ".gitignore",
+    "README.md",
+    "package.json",
+    "main.js",
+    "host.html",
+    "fixture.html",
+    "artifacts/normal.png",
+    "receipt/execution-started.json",
+    "receipt/execution-result.json",
+    "receipt/normal-result.json",
+    "receipt/teardown.json",
+    "receipt/stdout.txt",
+    "receipt/stderr.txt",
+    "privacy-review.json",
+    "SHA256SUMS.json"
+  ],
+  "excluded": [
+    {
+      "path": "runs/**",
+      "reason": "Contains raw per-run profiles and raw stdout/stderr; never publish."
+    },
+    {
+      "path": "profile/**",
+      "reason": "Legacy local profile; never publish."
+    },
+    {
+      "path": "backup/**",
+      "reason": "Preimages and raw local run receipts; never publish."
+    },
+    {
+      "path": "independent-public-package-review.*",
+      "reason": "Reviewer artifacts are excluded from the portable package."
+    }
+  ],
+  "checks": [
+    {
+      "name": "no_absolute_paths_or_private_aliases_in_allowlist_text",
+      "result": "pass",
+      "detail": "Scanned allowlisted text files after final evidence refresh."
+    },
+    {
+      "name": "synthetic_image",
+      "result": "pass",
+      "detail": "Retained PNG was visually inspected and contains only synthetic flat red content."
+    },
+    {
+      "name": "independent_pedigree",
+      "result": "pass",
+      "detail": "main.js is a minimized independent CDP reproduction and has no maintained-source import."
+    },
+    {
+      "name": "final_io",
+      "result": "pass_with_nonfatal_runtime_diagnostics",
+      "detail": "Final unique run directory was created and process exited 0; raw stderr had local-path cache diagnostics and remains excluded."
+    }
+  ],
+  "notes": [
+    "The SHA manifest intentionally does not hash itself.",
+    "Public receipt/stderr.txt is a safe summary; raw final stderr is retained only under excluded runs/**.",
+    "The final public execution records use PID and time but omit executable and filesystem paths."
+  ]
+}

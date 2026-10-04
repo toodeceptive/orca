@@ -1,0 +1,12 @@
+{
+  "pid": 48028,
+  "creationDate": "2026-10-04T15:18:47.517987-05:00",
+  "settled": true,
+  "exitCode": 0,
+  "endedUtc": "2026-10-04T20:18:55.0636229Z",
+  "stdoutSha256": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+  "rawStderrSha256": "1a2ffed5f34e78038fc84981f4142a8f375b5350df25c753aea4ded347f1ff2e",
+  "rawStderrPublished": false,
+  "publishedStderrSummarySha256": "00be3627a5c09e3f1285d0c499963f261719409bca5a99cb147d7ec967713465",
+  "publishedStderrSummaryPath": "receipt/stderr.txt"
+}

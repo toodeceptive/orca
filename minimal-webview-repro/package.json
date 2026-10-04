@@ -1,0 +1,9 @@
+{
+  "name": "electron-webview-fullpage-minimal-repro",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Synthetic fixed-parent Electron webview full-page CDP reproduction",
+  "main": "main.js",
+  "scripts": { "repro": "electron ." },
+  "engines": { "electron": "43.7.5" }
+}
