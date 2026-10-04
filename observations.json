@@ -1,0 +1,35 @@
+{
+  "schema": "browser-helper-format-proof/v1",
+  "observedUtc": "2026-10-04T16:09:54.053874+00:00",
+  "platform": "Windows x64",
+  "agentBrowserVersion": "0.27.0",
+  "sourceCommit": "4ba04fe94ee5b02364e8dcd6ba70fc5945ba053c",
+  "content": "Locally created synthetic HTML, 640 x 360, isolated headless Chrome profile",
+  "checks": [
+    {
+      "invocation": "baseline-default",
+      "requestedFormat": "png",
+      "actualEncoding": "png",
+      "bytes": 11423,
+      "sha256": "33952698c6d485e4a3283a36013965d6f3829f654beda7d76148ac0cf768ac88"
+    },
+    {
+      "invocation": "requested-jpeg",
+      "requestedFormat": "jpeg",
+      "actualEncoding": "jpeg",
+      "bytes": 16074,
+      "sha256": "db0e0c9a9b3b012e4274f8a13df74f23b45c7fd9026ce261b1b6c92b15a7b51b"
+    },
+    {
+      "invocation": "requested-png",
+      "requestedFormat": "png",
+      "actualEncoding": "png",
+      "bytes": 11423,
+      "sha256": "33952698c6d485e4a3283a36013965d6f3829f654beda7d76148ac0cf768ac88"
+    }
+  ],
+  "sessionClosed": true,
+  "ownedProcessesAbsentAfterClose": true,
+  "scope": "Real bundled helper encoding and separate source regression tests; installed Orca not patched",
+  "fullPageRepetitionResolved": false
+}
