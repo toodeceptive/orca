@@ -1,0 +1,98 @@
+{
+  "scope": "Real Win32 maximized-window restoration using synthetic owned WinForms windows",
+  "source_pr": "https://github.com/stablyai/orca/pull/25249",
+  "source_head": "54532128f6a7e67720a8bcbe27c665fa6f6e280d",
+  "fixture_script_sha256": "1d174fff88515032c0828147451fecc01dc7329b5fc7c6dd94565b2b20604a16",
+  "capture": "PrintWindow on the validated fixture HWND only; images are unedited",
+  "limitation": "Baseline receives a process-shaped object containing the validated fixture HWND. This does not exercise the process main-window heuristic, live tooltip transitions, synthetic click delivery, or an entire application workflow.",
+  "observations": [
+    {
+      "mode": "baseline",
+      "observedUtc": "2026-10-04T15:13:23.8085740Z",
+      "sourceSha256": "104d551f4d423c619eed22e65f0e6f74b37a104de01dadc49ce0b7844f32597c",
+      "functionSha256": "42259c99ba32ef49fb8500bbaf6ce12deb22e9a211dbc19d7346def33e65fa60",
+      "shellVersion": "5.1.26100.9444",
+      "beforeAfterBoundsEqual": false,
+      "before": {
+        "isZoomed": true,
+        "isIconic": false,
+        "bounds": [
+          -8,
+          -8,
+          1382,
+          784
+        ]
+      },
+      "after": {
+        "isZoomed": false,
+        "isIconic": false,
+        "bounds": [
+          0,
+          0,
+          900,
+          560
+        ]
+      },
+      "screenshots": [
+        {
+          "file": "baseline-before.png",
+          "sha256": "799cd741c876c3f6b29654b2643afdc3f6178b89b855e40d23aa677b174ce8b6",
+          "width": 1382,
+          "height": 784,
+          "phase": "BEFORE"
+        },
+        {
+          "file": "baseline-after.png",
+          "sha256": "153667a4287b59eb48aff36c72926ad44402855bc527fff1078e48081a93741e",
+          "width": 900,
+          "height": 560,
+          "phase": "AFTER"
+        }
+      ]
+    },
+    {
+      "mode": "repaired",
+      "observedUtc": "2026-10-04T15:13:32.4263153Z",
+      "sourceSha256": "13b496f22c46f48aeb9a1bbb796f873b1d40817d0ba701adb1936df197d77540",
+      "functionSha256": "937baab109ddf6423aa192f5d8c66e9dd328c8fda670d40c97bcdcc26dd7935d",
+      "shellVersion": "5.1.26100.9444",
+      "beforeAfterBoundsEqual": true,
+      "before": {
+        "isZoomed": true,
+        "isIconic": false,
+        "bounds": [
+          -8,
+          -8,
+          1382,
+          784
+        ]
+      },
+      "after": {
+        "isZoomed": true,
+        "isIconic": false,
+        "bounds": [
+          -8,
+          -8,
+          1382,
+          784
+        ]
+      },
+      "screenshots": [
+        {
+          "file": "repaired-before.png",
+          "sha256": "a1a1e4155194f779b28b84d7582bb03190ff03af567a43e78d369d413585d86c",
+          "width": 1382,
+          "height": 784,
+          "phase": "BEFORE"
+        },
+        {
+          "file": "repaired-after.png",
+          "sha256": "14b54d5bd8156bd19a3ed6e0c9c01b832c3b678d614b689e3088a987c3f529de",
+          "width": 1382,
+          "height": 784,
+          "phase": "AFTER"
+        }
+      ]
+    }
+  ]
+}
