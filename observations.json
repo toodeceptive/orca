@@ -1,0 +1,19 @@
+{
+  "fixture": {
+    "viewport": { "width": 1152, "height": 682, "dpr": 1 },
+    "pageHeight": 2728,
+    "centres": [
+      { "y": 341, "color": "red" },
+      { "y": 1023, "color": "green" },
+      { "y": 1705, "color": "blue" },
+      { "y": 2387, "color": "yellow" }
+    ]
+  },
+  "environment": { "platform": "Windows", "electron": "43.7.5" },
+  "sourceScope": "capture function only",
+  "observations": {
+    "before": "The red first viewport is repeated at the green, blue, and yellow centres.",
+    "afterPng": "All four centre samples exactly match the synthetic fixture.",
+    "afterJpeg": "All four centre samples match within a maximum absolute channel error of 1."
+  }
+}

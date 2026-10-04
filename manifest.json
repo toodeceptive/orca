@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "finalSha256": "f88b27abc79971923315b28cf2900367ff4f4dde5ac6cea5afe4eca41ec23ba3",
+    "testedSha256": "d69722fcf462c0a5e1f865a2567c941e479af3e5c01377212d5adac6e7abae14",
+    "equivalence": "The final source differs from the tested source only by comments."
+  },
+  "evidence": {
+    "platform": "Windows",
+    "electron": "43.7.5",
+    "viewport": { "width": 1152, "height": 682, "dpr": 1 },
+    "pageHeight": 2728,
+    "scope": "source capture in a hidden BrowserWindow"
+  },
+  "files": [
+    { "name": "before.png", "bytes": 14822, "sha256": "b3ef821e50d1a1a53fd841ab6792305a7d4f288d4ea6cb279ec50d82b359ad84" },
+    { "name": "after.png", "bytes": 15180, "sha256": "ce0dd61404f03dbe6d3b746a2042aae7515219bdb35a1b353b91efdceffa6e0a" },
+    { "name": "after.jpeg", "bytes": 23872, "sha256": "2527418a048b9c405e7b9aff869cc36f2003bb68e82f1ff38be15ff84637e884" },
+    { "name": "README.md", "bytes": 701, "sha256": "74df3365cd3601b5427cc9f2c1c413f94ab955811dd955684f2cc30af3cec4f4" },
+    { "name": "observations.json", "bytes": 682, "sha256": "bb2e5bc2407814d3d966e319c39b1821ea90635802941317ef85a3c31aca7a27" }
+  ]
+}
