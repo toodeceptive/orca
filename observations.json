@@ -1,0 +1,132 @@
+{
+  "schema": "synthetic-browser-capture-observations/v1",
+  "sourceCommit": "7ef977e0558b05c50eed501ea99a2968ed022154",
+  "sourceFilesSha256": {
+    "src/main/browser/cdp-screenshot.ts": "4b6be5219c0d31eb82436ecb86d4c55e3b82e5c64d8a78da0f71f8c77c2c8dc0",
+    "src/main/browser/cdp-screenshot.test.ts": "53f18d200c345c7eb7902c40d3de97560304ace61fa6808b592d2853284afe01"
+  },
+  "runtime": {
+    "electron": "43.7.5",
+    "platform": "Windows",
+    "devicePixelRatio": 1
+  },
+  "fixture": {
+    "bands": [
+      [
+        216,
+        48,
+        48
+      ],
+      [
+        48,
+        176,
+        72
+      ],
+      [
+        48,
+        96,
+        216
+      ],
+      [
+        216,
+        176,
+        48
+      ]
+    ],
+    "width": 1152,
+    "documentHeight": 2728,
+    "normalViewportHeight": 682
+  },
+  "captures": [
+    {
+      "file": "correct.png",
+      "sha256": "ce0dd61404f03dbe6d3b746a2042aae7515219bdb35a1b353b91efdceffa6e0a",
+      "width": 1152,
+      "height": 2728,
+      "topLevel": {
+        "physicalViewportHeight": 682,
+        "primaryCdpCalls": 1,
+        "nativePulses": 0,
+        "fourBandsMatch": true,
+        "hidden": true,
+        "focused": false,
+        "ownedWindowsAfter": 0,
+        "scope": "Capture settled before first250ms probe; this route does not exercise delayed pulses."
+      },
+      "embeddedGuest": {
+        "ownedPhysicalParentHeightDuringCapture": 2728,
+        "restoredParentContentHeight": 682,
+        "restoredGuestHeight": 682,
+        "exactOriginalStylesRestored": [
+          null,
+          null,
+          null
+        ],
+        "primaryCdpCalls": 1,
+        "nativePulses": 1,
+        "fourBandsMatch": true,
+        "hidden": true,
+        "focused": false,
+        "ownedWindowsAfter": 0,
+        "scope": "The parent was enlarged only in the owned diagnostic fixture; production source does not resize windows."
+      }
+    },
+    {
+      "file": "correct.jpeg",
+      "sha256": "2527418a048b9c405e7b9aff869cc36f2003bb68e82f1ff38be15ff84637e884",
+      "width": 1152,
+      "height": 2728,
+      "topLevel": {
+        "physicalViewportHeight": 682,
+        "primaryCdpCalls": 1,
+        "nativePulses": 0,
+        "fourBandsMatch": true,
+        "hidden": true,
+        "focused": false,
+        "ownedWindowsAfter": 0,
+        "scope": "Capture settled before first250ms probe; this route does not exercise delayed pulses."
+      },
+      "embeddedGuest": {
+        "ownedPhysicalParentHeightDuringCapture": 2728,
+        "restoredParentContentHeight": 682,
+        "restoredGuestHeight": 682,
+        "exactOriginalStylesRestored": [
+          null,
+          null,
+          null
+        ],
+        "primaryCdpCalls": 1,
+        "nativePulses": 2,
+        "fourBandsMatch": true,
+        "hidden": true,
+        "focused": false,
+        "ownedWindowsAfter": 0,
+        "scope": "The parent was enlarged only in the owned diagnostic fixture; production source does not resize windows."
+      }
+    },
+    {
+      "file": "guest-normal-unresolved.png",
+      "sha256": "b3ef821e50d1a1a53fd841ab6792305a7d4f288d4ea6cb279ec50d82b359ad84",
+      "width": 1152,
+      "height": 2728,
+      "guestViewportHeight": 682,
+      "primaryCdpCalls": 1,
+      "nativePulses": 1,
+      "centerBandSamplesMatch": [
+        true,
+        false,
+        false,
+        false
+      ],
+      "hidden": true,
+      "focused": false,
+      "ownedWindowsAfter": 0,
+      "scope": "Unresolved normal-parent guest capture; repeated first band is not accepted."
+    }
+  ],
+  "limits": [
+    "These are unedited synthetic fixture outputs, not private desktop screenshots.",
+    "No installed Orca or normal-height guest-webview fix is established.",
+    "The two positive fixture routes produce byte-identical PNG/JPEG files. Each file is included once with both observed routes listed."
+  ]
+}
