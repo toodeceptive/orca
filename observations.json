@@ -1,0 +1,86 @@
+{
+  "sourceCommit": "da473b9f6fcc16a234074184cda974166d3bddde",
+  "platform": "Windows x64",
+  "electronVersion": "43.7.5",
+  "test": "tests/e2e/desktop-owned-view-presenter.spec.ts",
+  "creation": "Ordinary createBrowserTab without explicit desktopBackend option",
+  "captureMethod": "Maintained runtime browser.fullScreenshot with explicit page/worktree selectors",
+  "image": {
+    "file": "owned-view-full-page.png",
+    "sha256": "ec5bb44f104c198743dbc9319b68bd8db6f4b9e840f4f123af8e7dcb93a704a4",
+    "width": 720,
+    "height": 4096,
+    "bytes": 18583
+  },
+  "expectedBandCenterRgb": [
+    [
+      255,
+      0,
+      0
+    ],
+    [
+      0,
+      255,
+      0
+    ],
+    [
+      0,
+      0,
+      255
+    ],
+    [
+      255,
+      255,
+      0
+    ]
+  ],
+  "identityAndRestoration": "Same guest/page/generation/document time origin; DPR1, zoom0, scroll0/0, viewport735x657 and native bounds restored.",
+  "nativeModalVisibility": [
+    true,
+    false,
+    true
+  ],
+  "guestDestroyedAfterClose": true,
+  "testResult": {
+    "expected": 1,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "limitations": [
+    "Hidden owner, separately captured guest and renderer surfaces; no composed-child image claim.",
+    "Initial scroll0/0 and DPR1 only.",
+    "No installed-release, legacy-webview, remote, or other-platform acceptance."
+  ],
+  "beforeReference": {
+    "url": "https://raw.githubusercontent.com/toodeceptive/orca/9f5ca5910b1f3af48dced142f8aa00bd9e534edd/minimal-webview-repro/artifacts/normal.png",
+    "sha256": "b3ef821e50d1a1a53fd841ab6792305a7d4f288d4ea6cb279ec50d82b359ad84",
+    "width": 1152,
+    "height": 2728,
+    "bandCenterRgb": [
+      [
+        216,
+        48,
+        48
+      ],
+      [
+        216,
+        48,
+        48
+      ],
+      [
+        216,
+        48,
+        48
+      ],
+      [
+        216,
+        48,
+        48
+      ]
+    ],
+    "fixtureDeclaredFirstBandColor": "#d83030",
+    "fixtureUrl": "https://github.com/toodeceptive/orca/blob/9f5ca5910b1f3af48dced142f8aa00bd9e534edd/minimal-webview-repro/fixture.html",
+    "scope": "Existing portable legacy-webview reproduction. Different fixture/geometry from the new owned-view E2E."
+  }
+}
