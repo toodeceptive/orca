@@ -25,6 +25,7 @@ import type {
   BrowserTabPageState
 } from '../describe-page/browser-page-types'
 import type { MutableRefObject } from 'react'
+import type { BrowserPageSurface } from '../host-guest/browser-page-surface'
 
 export type NavigateBrowserPageToUrlArgs = {
   url: string
@@ -35,6 +36,8 @@ export type NavigateBrowserPageToUrlArgs = {
   trackNextLoadingEventRef: MutableRefObject<boolean>
   recoveryNavigationValidationRef: MutableRefObject<BrowserPageRecoveryNavigationValidation | null>
   webviewRef: MutableRefObject<Electron.WebviewTag | null>
+  surface?: BrowserPageSurface
+  retryGuestRecoveryRef?: MutableRefObject<() => void>
   onSetUrlRef: MutableRefObject<BrowserPageUrlSetter>
   onUpdatePageStateRef: MutableRefObject<(tabId: string, updates: BrowserTabPageState) => void>
   setAddressBarValue: (value: string) => void
@@ -51,6 +54,8 @@ export function navigateBrowserPageToUrl({
   trackNextLoadingEventRef,
   recoveryNavigationValidationRef,
   webviewRef,
+  surface,
+  retryGuestRecoveryRef,
   onSetUrlRef,
   onUpdatePageStateRef,
   setAddressBarValue,
@@ -75,7 +80,7 @@ export function navigateBrowserPageToUrl({
     setResourceNotice(null)
 
     const webview = webviewRef.current
-    if (!webview) {
+    if (surface ? !surface.isAttached() : !webview) {
       return
     }
     trackNextLoadingEventRef.current = targetUrl !== ORCA_BROWSER_BLANK_URL
@@ -83,7 +88,24 @@ export function navigateBrowserPageToUrl({
     recoveryNavigationValidationRef.current = recoveryLoadError
       ? { committed: false, started: false, targetUrl: normalizedBrowserModelUrl }
       : null
-    webview.src = targetUrl
+    if (surface) {
+      const failed = (error: unknown): void => {
+        if (lastKnownWebviewUrlRef.current === normalizedBrowserModelUrl) {
+          lastKnownWebviewUrlRef.current = null
+        }
+        setResourceNotice(
+          error instanceof Error ? error.message : 'The browser page could not navigate.'
+        )
+        retryGuestRecoveryRef?.current()
+      }
+      try {
+        void Promise.resolve(surface.navigate(targetUrl)).catch(failed)
+      } catch (error) {
+        failed(error)
+      }
+    } else if (webview) {
+      webview.src = targetUrl
+    }
     if (targetUrl !== ORCA_BROWSER_BLANK_URL) {
       focusWebviewNow()
     }

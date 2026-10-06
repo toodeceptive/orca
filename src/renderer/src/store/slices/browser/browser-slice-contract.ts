@@ -7,6 +7,7 @@ import type {
   BrowserHistoryEntry,
   BrowserLoadError,
   BrowserPage,
+  BrowserPageDesktopBackend,
   BrowserPageDocLocation,
   BrowserSessionProfile,
   BrowserViewportPresetId,
@@ -32,6 +33,7 @@ import type { ExecutionHostId } from '../../../../../shared/execution-host'
 import type { RuntimeBrowserPlacement } from '../../../../../shared/runtime-browser-placement'
 
 export type CreateBrowserTabOptions = {
+  desktopBackend?: BrowserPageDesktopBackend
   activate?: boolean
   browserPageId?: string
   title?: string
@@ -51,6 +53,7 @@ export type CreateBrowserTabOptions = {
 }
 
 export type CreateBrowserPageOptions = {
+  desktopBackend?: BrowserPageDesktopBackend
   activate?: boolean
   title?: string
   browserRuntimeEnvironmentId?: string | null
@@ -112,6 +115,7 @@ export type BrowserSlice = {
   browserPagesByWorkspace: Record<string, BrowserPage[]>
   browserCertificateFailuresByPageId: Record<string, BrowserCertificateFailure>
   browserAnnotationsByPageId: Record<string, BrowserPageAnnotation[]>
+  browserAnnotationMarkerIdsByPageId: Record<string, string[]>
   remoteBrowserPageHandlesByPageId: Record<string, RemoteBrowserPageHandle>
   /**
    * Closes of client-hosted pages their owning runtime never heard, keyed by environment.
@@ -196,6 +200,7 @@ export type BrowserSlice = {
   ) => void
   deleteBrowserPageAnnotation: (pageId: string, annotationId: string) => void
   clearBrowserPageAnnotations: (pageId: string) => void
+  invalidateBrowserPageAnnotationGeometry: (pageId: string) => void
   removeDeliveredBrowserPageAnnotations: (
     pageId: string,
     deliveredAnnotations: readonly BrowserPageAnnotation[]

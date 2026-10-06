@@ -22,6 +22,7 @@ import { BrowserPageGrabToast } from './browser-page-grab-toast'
 import { PendingBrowserAnnotationCard } from './pending-browser-annotation-card'
 import type { useBrowserPageAnnotationSend } from './use-browser-page-annotation-send'
 import type { useBrowserPageGrabAnnotations } from './use-browser-page-grab-annotations'
+import type { BrowserPageSurface } from '../host-guest/browser-page-surface'
 
 /**
  * Everything the annotate and markup tools paint over a guest: the draw surface, the pending
@@ -38,6 +39,7 @@ export function BrowserGuestAnnotateOverlays({
   containerRef,
   markupPortalContainer,
   webviewRef,
+  surface,
   browserOverlayViewport,
   worktreeId
 }: {
@@ -48,6 +50,7 @@ export function BrowserGuestAnnotateOverlays({
   containerRef: RefObject<HTMLDivElement | null>
   markupPortalContainer?: HTMLDivElement | null
   webviewRef: MutableRefObject<Electron.WebviewTag | null>
+  surface?: BrowserPageSurface
   browserOverlayViewport: BrowserOverlayViewport
   worktreeId: string
 }): React.JSX.Element {
@@ -100,7 +103,8 @@ export function BrowserGuestAnnotateOverlays({
             pendingAnnotationPayload,
             containerRef.current,
             webviewRef.current,
-            browserOverlayViewport
+            browserOverlayViewport,
+            surface?.getBounds()
           )}
           portalContainer={containerRef.current}
           onAdd={handleAddBrowserAnnotation}
@@ -148,7 +152,7 @@ export function BrowserGuestAnnotateOverlays({
               }
               const rect = grab.payload.target.rectViewport
               const webview = webviewRef.current
-              const webviewRect = webview?.getBoundingClientRect()
+              const webviewRect = surface?.getBounds() ?? webview?.getBoundingClientRect()
               const cRect = containerRef.current?.getBoundingClientRect()
               const offsetX = (webviewRect?.left ?? 0) - (cRect?.left ?? 0)
               const offsetY = (webviewRect?.top ?? 0) - (cRect?.top ?? 0)

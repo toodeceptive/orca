@@ -150,7 +150,7 @@ export function buildWorktreePurgeState(
     suppressedPtyExitIds: omitByPtyId(s.suppressedPtyExitIds),
     pendingCodexPaneRestartIds: omitByPtyId(s.pendingCodexPaneRestartIds),
     // Why: these agent-status/unread/input maps clear only on the single removeWorktree teardown path; the bulk reconcile / remove-project / hydration-stale paths run no teardown, so without this they orphan an entry per agent pane (plus a phantom unread badge).
-    // retainedAgentsByPaneKey and runtimeAgentOrchestrationByPaneKey are omitted here — both self-heal (pruneRetainedAgents on worktreesByRepo change; runtime map replaced wholesale each sync).
+    // retainedAgentsByPaneKey and runtimeAgentOrchestrationByPaneKey are omitted here â€” both self-heal (pruneRetainedAgents on worktreesByRepo change; runtime map replaced wholesale each sync).
     agentStatusByPaneKey: nextAgentStatusByPaneKey,
     ...(nextAgentStatusByPaneKey !== s.agentStatusByPaneKey
       ? { agentStatusEpoch: s.agentStatusEpoch + 1 }
@@ -181,6 +181,7 @@ export function buildWorktreePurgeState(
     activeBrowserTabIdByWorktree: omitByWorktree(s.activeBrowserTabIdByWorktree),
     // Why: keyed by page/workspace id, only cleaned by closeBrowserTab on the single-removal path; the bulk reconcile missed them, orphaning an entry per page of externally-removed worktrees.
     browserAnnotationsByPageId: omitByPageId(s.browserAnnotationsByPageId),
+    browserAnnotationMarkerIdsByPageId: omitByPageId(s.browserAnnotationMarkerIdsByPageId),
     remoteBrowserPageHandlesByPageId: omitByPageId(s.remoteBrowserPageHandlesByPageId),
     pendingAddressBarFocusByPageId: omitByPageId(s.pendingAddressBarFocusByPageId),
     // createBrowserTab writes both the workspace id and the page id into this map.
