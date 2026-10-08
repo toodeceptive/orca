@@ -324,6 +324,12 @@ export const ThreadGoalParams = z
         })
         .strict(),
       z.object({ kind: z.literal('status'), status: z.enum(['active', 'paused']) }).strict(),
+      z
+        .object({
+          kind: z.literal('budget'),
+          tokenBudget: z.number().int().positive().max(Number.MAX_SAFE_INTEGER)
+        })
+        .strict(),
       z.object({ kind: z.literal('clear') }).strict()
     ])
   })

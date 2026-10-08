@@ -122,3 +122,41 @@ describe('formatNativeChatThreadGoalElapsed', () => {
     expect(formatNativeChatThreadGoalElapsed(seconds)).toBe(expected)
   })
 })
+
+describe('explicit goal token budget editor', () => {
+  it('has no default limit and sends only the chosen budget after explicit submit', () => {
+    const { onChange } = renderBanner(goal({ tokensUsed: 12_345 }))
+    fireEvent.click(screen.getByRole('button', { name: 'Show full goal' }))
+    const input = screen.getByLabelText('Total token budget')
+    const apply = screen.getByRole('button', { name: 'Apply budget' })
+    expect(input).toHaveValue('')
+    expect(apply).toBeDisabled()
+    expect(onChange).not.toHaveBeenCalled()
+    fireEvent.change(input, { target: { value: '40000' } })
+    fireEvent.click(apply)
+    expect(onChange.mock.calls).toEqual([[{ kind: 'budget', tokenBudget: 40_000 }]])
+    expect(screen.getByText('Pursuing goal')).toBeInTheDocument()
+    expect(screen.getByText('Ship the parser')).toBeInTheDocument()
+  })
+  it('rejects invalid caps and caps at or below retained usage', () => {
+    const { onChange } = renderBanner(goal({ tokensUsed: 12_345 }))
+    fireEvent.click(screen.getByRole('button', { name: 'Show full goal' }))
+    for (const value of ['0', '-1', '1.5', '12345', '12000', '1e6', '9007199254740992']) {
+      fireEvent.change(screen.getByLabelText('Total token budget'), { target: { value } })
+      expect(screen.getByRole('button', { name: 'Apply budget' })).toBeDisabled()
+    }
+    expect(onChange).not.toHaveBeenCalled()
+  })
+  it('keeps a paused goal paused and disables submission while a write is pending', () => {
+    const { onChange } = renderBanner(
+      goal({ status: 'paused', tokenBudget: 40_000, tokensUsed: 12_345 }),
+      true
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Show full goal' }))
+    expect(screen.getByLabelText('Total token budget')).toHaveValue('40000')
+    expect(screen.getByLabelText('Total token budget')).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Apply budget' })).toBeDisabled()
+    expect(screen.getByText('Paused goal')).toBeInTheDocument()
+    expect(onChange).not.toHaveBeenCalled()
+  })
+})

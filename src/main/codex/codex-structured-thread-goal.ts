@@ -20,6 +20,15 @@ export function codexThreadGoalRequests(
   if (change.kind === 'status') {
     return [{ method: 'thread/goal/set', params: { threadId, status: change.status } }]
   }
+  if (change.kind === 'budget') {
+    // Explicit budget edit only: omit objective/status to preserve the existing goal and usage.
+    return [
+      {
+        method: 'thread/goal/set',
+        params: { threadId, tokenBudget: change.tokenBudget, origin: 'user' }
+      }
+    ]
+  }
   // `set` on an existing goal rewrites its objective and keeps its id and usage
   // counters, so a replacement clears first. An active goal on an idle thread
   // starts work by itself, so a set needs no turn.
