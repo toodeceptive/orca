@@ -38,6 +38,8 @@ export function journalRecordsThreadGoalChange(
       return goal === null
     case 'status':
       return goal !== null && goal.status === change.status
+    case 'budget':
+      return goal !== null && goal.tokenBudget === change.tokenBudget
     case 'set':
       return goal !== null && goal.status === 'active' && goal.objective === change.objective
   }

@@ -449,6 +449,7 @@ export const AGENT_SESSION_THREAD_GOAL_OBJECTIVE_MAX_LENGTH = 4000
 export type AgentSessionThreadGoalChange =
   | { kind: 'set'; objective: string }
   | { kind: 'status'; status: 'active' | 'paused' }
+  | { kind: 'budget'; tokenBudget: number }
   | { kind: 'clear' }
 
 export type AgentSessionThreadGoalResult = {

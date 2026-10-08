@@ -344,3 +344,45 @@ describe('threadGoalPlan replay', () => {
     expect(journalRecordsThreadGoalChange(null, pause)).toBe(false)
   })
 })
+
+describe('budget-only thread goal change', () => {
+  it('uses the existing adapter without replacing or re-journaling the objective', async () => {
+    const journal = await openJournal()
+    await appendGoalRow(journal, { tokenBudget: 20_000, tokensUsed: 12_345 })
+    const before = journal.threadGoal()
+    const changeThreadGoal = vi.fn(async () => ({ ok: true as const }))
+    const result = await performThreadGoalChange(context(journal, { changeThreadGoal }), {
+      clientOperationId: 'budget-edit',
+      change: { kind: 'budget', tokenBudget: 40_000 }
+    })
+    expect(result).toEqual({ ok: true, value: { change: 'budget' } })
+    expect(changeThreadGoal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        change: { kind: 'budget', tokenBudget: 40_000 },
+        replacesGoal: false
+      })
+    )
+    expect(journal.threadGoal()).toEqual(before)
+    expect(journal.snapshot().items.filter((item) => item.body.kind === 'message')).toHaveLength(0)
+  })
+  it('recovers an unknown budget write only from the exact durable provider budget', async () => {
+    const journal = await openJournal()
+    const ctx = context(journal, {})
+    const plan = threadGoalPlan({
+      envelope: {
+        sessionId: 'session-1',
+        clientOperationId: 'budget-replay',
+        expectedRuntimeFence: 1,
+        payloadFingerprint: 'fp'
+      },
+      change: { kind: 'budget', tokenBudget: 40_000 }
+    })
+    expect(plan.replay(ctx, { status: 'unknown' })).toBeNull()
+    await appendGoalRow(journal, { tokenBudget: 20_000 })
+    expect(plan.replay(ctx, { status: 'unknown' })).toBeNull()
+    await appendGoalRow(journal, { tokenBudget: 40_000, tokensUsed: 12_345, status: 'paused' })
+    expect(plan.replay(ctx, { status: 'unknown' })).toEqual({ change: 'budget' })
+    expect(journal.threadGoal()?.tokensUsed).toBe(12_345)
+    expect(journal.threadGoal()?.status).toBe('paused')
+  })
+})

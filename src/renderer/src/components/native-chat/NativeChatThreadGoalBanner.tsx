@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { ChevronDown, ChevronUp, Goal, Pause, Play, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useNow } from '@/hooks/use-now'
 import { translate } from '@/i18n/i18n'
@@ -40,6 +41,55 @@ function GoalAction(props: {
         {props.label}
       </TooltipContent>
     </Tooltip>
+  )
+}
+
+function GoalBudgetEditor(props: {
+  goal: AgentJournalThreadGoal
+  pending: boolean
+  onChange: (change: AgentSessionThreadGoalChange) => void
+}): React.JSX.Element {
+  const inputId = useId()
+  const [draft, setDraft] = useState(props.goal.tokenBudget?.toString() ?? '')
+  useEffect(() => setDraft(props.goal.tokenBudget?.toString() ?? ''), [props.goal.tokenBudget])
+  const amount = /^[1-9]\d*$/.test(draft) ? Number(draft) : Number.NaN
+  const valid = Number.isSafeInteger(amount) && amount > props.goal.tokensUsed
+  const disabled = props.pending || !valid || amount === props.goal.tokenBudget
+  return (
+    <form
+      className="mt-2 flex flex-wrap items-end gap-2 pb-2 text-xs"
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (!disabled) {
+          props.onChange({ kind: 'budget', tokenBudget: amount })
+        }
+      }}
+    >
+      <div className="min-w-0 flex-1">
+        <label htmlFor={inputId} className="block pb-1">
+          {translate('components.native-chat.goal.totalTokenBudget', 'Total token budget')}
+        </label>
+        <Input
+          id={inputId}
+          inputMode="numeric"
+          value={draft}
+          disabled={props.pending}
+          onChange={(event) => setDraft(event.target.value)}
+          aria-describedby={`${inputId}-help`}
+        />
+        <p id={`${inputId}-help`} className="pt-1 text-muted-foreground">
+          {translate('components.native-chat.goal.tokensUsed', 'Tokens used')}:{' '}
+          {props.goal.tokensUsed.toLocaleString()}.{' '}
+          {translate(
+            'components.native-chat.goal.budgetAboveUsage',
+            'Enter a whole-number total above usage. Saving keeps the current goal and status.'
+          )}
+        </p>
+      </div>
+      <Button type="submit" size="sm" disabled={disabled}>
+        {translate('components.native-chat.goal.applyBudget', 'Apply budget')}
+      </Button>
+    </form>
   )
 }
 
@@ -112,6 +162,14 @@ export function NativeChatThreadGoalBanner(props: {
             </GoalAction>
           </div>
         </div>
+        {expanded ? (
+          <GoalBudgetEditor
+            key={goal.createdAt}
+            goal={goal}
+            pending={pending}
+            onChange={onChange}
+          />
+        ) : null}
       </div>
     </div>
   )

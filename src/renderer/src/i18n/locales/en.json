@@ -18527,6 +18527,10 @@
         "paused": "Paused goal",
         "blocked": "Goal blocked",
         "limited": "Goal limited",
+        "totalTokenBudget": "Total token budget",
+        "tokensUsed": "Tokens used",
+        "budgetAboveUsage": "Enter a whole-number total above usage. Saving keeps the current goal and status.",
+        "applyBudget": "Apply budget",
         "attachmentsUnsupported": "Remove attachments before setting a goal."
       },
       "fileLinks": {
