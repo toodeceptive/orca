@@ -52,6 +52,7 @@
     }
   },
   "browser": {
+    "pageContent": "Browser page",
     "loadFailure": {
       "connectionNotSecure": "Connection isn't secure",
       "cantReachHost": "Can't reach {{value0}}",
