@@ -78,7 +78,9 @@
     },
     "guestRecovery": {
       "title": "Browser page stopped",
-      "failed": "The browser page stopped unexpectedly. Retry to restore it."
+      "failed": "The browser page stopped unexpectedly. Retry to restore it.",
+      "openFailed": "The browser page could not be opened.",
+      "unresponsive": "The browser page stopped responding ({{reason}})."
     },
     "clientHosted": {
       "preparationFailed": "Couldn't start the remote browser on this desktop. Check the paired connection and try again.",

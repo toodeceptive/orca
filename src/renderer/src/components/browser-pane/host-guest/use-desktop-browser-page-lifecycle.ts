@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useAppStore } from '@/store'
+import { translate } from '@/i18n/i18n'
 import {
   normalizeBrowserNavigationUrl,
   redactKagiSessionToken
@@ -64,7 +65,10 @@ export function useDesktopBrowserPageLifecycle({
     const current = latest.current.options
     const failure = {
       code: BROWSER_GUEST_RECOVERY_ERROR_CODE,
-      description: error instanceof Error ? error.message : 'The browser page could not be opened.',
+      description:
+        error instanceof Error
+          ? error.message
+          : translate('browser.guestRecovery.openFailed', 'The browser page could not be opened.'),
       validatedUrl: redactKagiSessionToken(current.browserTabUrlRef.current)
     }
     current.activeLoadFailureRef.current = failure
@@ -88,7 +92,11 @@ export function useDesktopBrowserPageLifecycle({
       const value = latest.current.options
       const loadError = {
         code: BROWSER_GUEST_RECOVERY_ERROR_CODE,
-        description: `The browser page stopped responding (${reason}).`,
+        description: translate(
+          'browser.guestRecovery.unresponsive',
+          'The browser page stopped responding ({{reason}}).',
+          { reason }
+        ),
         validatedUrl: redactKagiSessionToken(value.browserTabUrlRef.current)
       }
       value.activeLoadFailureRef.current = loadError
