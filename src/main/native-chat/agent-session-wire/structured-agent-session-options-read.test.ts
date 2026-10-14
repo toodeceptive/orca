@@ -56,48 +56,58 @@ describe('options at rest', () => {
 })
 
 describe('live Codex option reads', () => {
-  it('leaves the session lane free while a cold listing waits, then applies it under the child fence', async () => {
-    const listing = Promise.withResolvers<void>()
-    const queue = new StructuredAgentSessionTaskQueue()
-    const child = { fence: 7 }
-    const apply = vi.fn(() => ({
-      models: [{ id: 'gpt-live', label: 'GPT Live', efforts: [] }],
-      current: { model: 'gpt-live' }
-    }))
-    const prepareReadOptions = vi.fn(async () => {
-      await listing.promise
-      return apply
-    })
-    const live = {
-      child,
-      params: { provider: 'codex' },
-      journal: { threadGoal: () => null, contextUsage: () => null }
-    }
-    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: this read touches only the declared context fields.
-    const context = {
-      deps: {
-        adapter: { prepareReadOptions },
-        agents: NO_STRUCTURED_AGENTS,
-        store: { getRecord: () => restingRecord() }
-      },
-      serialize: (sessionId: string, task: () => Promise<unknown>) =>
-        queue.serialize(sessionId, task),
-      openConversation: async () => live,
-      conversation: async () => live
-    } as unknown as StructuredAgentSessionMutationContext
+  it.each([
+    [false, 'codex', undefined],
+    [true, 'claude', false],
+    [true, 'codex', true]
+  ] as const)(
+    'reads budget capability with goal support %s on %s while leaving the session lane free',
+    async (threadGoal, provider, canChangeBudget) => {
+      const listing = Promise.withResolvers<void>()
+      const queue = new StructuredAgentSessionTaskQueue()
+      const child = { fence: 7 }
+      const apply = vi.fn(() => ({
+        models: [{ id: 'gpt-live', label: 'GPT Live', efforts: [] }],
+        current: { model: 'gpt-live' }
+      }))
+      const prepareReadOptions = vi.fn(async () => {
+        await listing.promise
+        return apply
+      })
+      const live = {
+        child,
+        params: { provider },
+        journal: { threadGoal: () => null, contextUsage: () => null }
+      }
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: this read touches only the declared context fields.
+      const context = {
+        deps: {
+          adapter: { prepareReadOptions },
+          agents: { capabilities: () => ({ threadGoal }) },
+          store: { getRecord: () => restingRecord() }
+        },
+        serialize: (sessionId: string, task: () => Promise<unknown>) =>
+          queue.serialize(sessionId, task),
+        openConversation: async () => live,
+        conversation: async () => live
+      } as unknown as StructuredAgentSessionMutationContext
 
-    const reading = readStructuredAgentSessionOptions(context, SESSION)
-    await vi.waitFor(() =>
-      expect(prepareReadOptions).toHaveBeenCalledWith({ sessionId: SESSION, fence: 7 })
-    )
-    await expect(queue.serialize(SESSION, async () => 'delivery can proceed')).resolves.toBe(
-      'delivery can proceed'
-    )
-    expect(apply).not.toHaveBeenCalled()
-    listing.resolve()
-    await expect(reading).resolves.toMatchObject({ current: { model: 'gpt-live' } })
-    expect(apply).toHaveBeenCalledOnce()
-  })
+      const reading = readStructuredAgentSessionOptions(context, SESSION)
+      await vi.waitFor(() =>
+        expect(prepareReadOptions).toHaveBeenCalledWith({ sessionId: SESSION, fence: 7 })
+      )
+      await expect(queue.serialize(SESSION, async () => 'delivery can proceed')).resolves.toBe(
+        'delivery can proceed'
+      )
+      expect(apply).not.toHaveBeenCalled()
+      listing.resolve()
+      await expect(reading).resolves.toMatchObject({ current: { model: 'gpt-live' } })
+      expect(apply).toHaveBeenCalledOnce()
+      expect((await reading).threadGoal).toEqual(
+        threadGoal ? { current: null, canChangeBudget } : undefined
+      )
+    }
+  )
 
   it('keeps a listing failure visible to the picker', async () => {
     const queue = new StructuredAgentSessionTaskQueue()

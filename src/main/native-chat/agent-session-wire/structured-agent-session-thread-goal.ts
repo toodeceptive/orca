@@ -26,9 +26,7 @@ function objectiveIdentity(clientOperationId: string): AgentJournalItemIdentity 
   return { provider: 'orca', clientMessageId: `thread-goal:${clientOperationId}` }
 }
 
-/** Whether the journal's latest goal already shows this change applied. The
- *  provider reports every goal transition, so this is the durable answer to an
- *  operation whose response was lost. */
+/** Goal state can recover transitions, but a budget value cannot identify its operation. */
 export function journalRecordsThreadGoalChange(
   goal: AgentJournalThreadGoal | null,
   change: AgentSessionThreadGoalChange
@@ -39,7 +37,7 @@ export function journalRecordsThreadGoalChange(
     case 'status':
       return goal !== null && goal.status === change.status
     case 'budget':
-      return goal !== null && goal.tokenBudget === change.tokenBudget
+      return false
     case 'set':
       return goal !== null && goal.status === 'active' && goal.objective === change.objective
   }
@@ -113,8 +111,7 @@ export function threadGoalPlan(params: {
         clientOperationId: params.envelope.clientOperationId,
         change: params.change
       }),
-    // A lost response is answered from the journal, which the provider keeps
-    // current; otherwise the change runs again, which is safe for every kind.
+    // Unknown budget writes require ledger proof; rerunning could change a replacement goal.
     recoverUnknownFromDurableState: true,
     replay: (ctx, outcome) =>
       outcome.status === 'succeeded' ||
@@ -122,6 +119,6 @@ export function threadGoalPlan(params: {
         journalRecordsThreadGoalChange(ctx.journal.threadGoal(), params.change))
         ? value
         : null,
-    rerunWhenReplayMissing: () => true
+    rerunWhenReplayMissing: () => params.change.kind !== 'budget'
   }
 }

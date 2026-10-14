@@ -98,6 +98,7 @@ export function NativeChatThreadGoalBanner(props: {
   goal: AgentJournalThreadGoal
   pending: boolean
   isVisible: boolean
+  canChangeBudget?: boolean
   /** The session's running turn, or null when idle; goal time accrues only while one runs. */
   runningTurn: { startedAt: number | null } | null
   onChange: (change: AgentSessionThreadGoalChange) => void
@@ -162,7 +163,7 @@ export function NativeChatThreadGoalBanner(props: {
             </GoalAction>
           </div>
         </div>
-        {expanded ? (
+        {expanded && props.canChangeBudget === true ? (
           <GoalBudgetEditor
             key={goal.createdAt}
             goal={goal}

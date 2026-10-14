@@ -158,7 +158,11 @@ export async function readStructuredAgentSessionOptions(
             reason: 'unsupported'
           }),
     conversationCommands: capabilities?.compact ? ['clear', 'compact'] : ['clear'],
-    ...(capabilities?.threadGoal ? { threadGoal: { current: session.journal.threadGoal() } } : {}),
+    ...(capabilities?.threadGoal
+      ? {
+          threadGoal: { current: session.journal.threadGoal(), canChangeBudget: agent === 'codex' }
+        }
+      : {}),
     ...(capabilities?.contextUsage
       ? { contextUsage: { current: session.journal.contextUsage() } }
       : {})

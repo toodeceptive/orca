@@ -56,7 +56,7 @@ function mutateWith(answer: MutateCall): {
 
 function harness(options: {
   journalItems?: readonly AgentJournalRenderItem[]
-  support?: { current: AgentJournalThreadGoal | null }
+  support?: { current: AgentJournalThreadGoal | null; canChangeBudget?: boolean }
   mutate?: StructuredAgentSessionMutate
 }) {
   const mutate = options.mutate ?? mutateWith(async () => null).mutate
@@ -73,6 +73,26 @@ describe('useStructuredAgentSessionThreadGoal', () => {
   it('is absent until the host reports it can change this session goal', () => {
     expect(harness({ journalItems: [goalRow(1, GOAL)] }).result.current).toBeNull()
   })
+
+  it.each([undefined, false, true])(
+    'requires explicit budget capability %s',
+    async (canChangeBudget) => {
+      const { mutate, calls } = mutateWith(async () => ({ change: 'budget' }))
+      const { result } = harness({ support: { current: GOAL, canChangeBudget }, mutate })
+      expect(result.current?.canChangeBudget).toBe(canChangeBudget === true)
+      await act(async () => {
+        await expect(result.current!.change({ kind: 'budget', tokenBudget: 40_000 })).resolves.toBe(
+          canChangeBudget === true
+        )
+      })
+      expect(calls).toHaveBeenCalledTimes(canChangeBudget === true ? 1 : 0)
+      expect(result.current?.goal).toEqual(GOAL)
+      await act(async () => {
+        await result.current!.change({ kind: 'clear' })
+      })
+      expect(calls).toHaveBeenCalledTimes(canChangeBudget === true ? 2 : 1)
+    }
+  )
 
   it('reads the goal off the loaded window, and off the host answer only when the window has none', () => {
     const older = { ...GOAL, objective: 'Older goal' }
