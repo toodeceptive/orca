@@ -404,7 +404,9 @@ function verifyNativeArgumentGuardrails() {
     )
   }
   if (
-    !windows.includes('Render-OrcaTree $root $windowFrame (Test-OrcaBrowserProcess $process)') ||
+    !windows.includes(
+      'Render-OrcaTree $root $windowFrame (Test-OrcaBrowserProcess $target.process)'
+    ) ||
     !windows.includes('inactive browser tabs omitted')
   ) {
     failures.push('Windows browser snapshots must compact large inactive browser tab strips')

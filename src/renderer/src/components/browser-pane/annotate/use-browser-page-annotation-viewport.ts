@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, type MutableRefObject } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type MutableRefObject
+} from 'react'
 import { createBrowserUuid } from '@/lib/browser-uuid'
 import { useAppStore } from '@/store'
 import type { BrowserGrabPayload } from '../../../../../shared/browser-grab-types'
@@ -26,8 +33,8 @@ export function useBrowserPageAnnotationViewport({
   pendingAnnotationPayload: BrowserGrabPayload | null
   cancelPendingBrowserCapture: () => void
 }): BrowserPageAnnotationBridge {
-  const annotationViewportBridgeTokenRef = useRef<string>(undefined!)
-  annotationViewportBridgeTokenRef.current ??= createBrowserUuid().replaceAll('-', '')
+  const [annotationViewportBridgeToken] = useState(() => createBrowserUuid().replaceAll('-', ''))
+  const annotationViewportBridgeTokenRef = useRef(annotationViewportBridgeToken)
   const isActiveRef = useRef(isActive)
   const pendingAnnotationPayloadRef = useRef(pendingAnnotationPayload)
   const invalidatePendingCaptureRef = useRef(cancelPendingBrowserCapture)

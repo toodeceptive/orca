@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type {
   DesktopBrowserViewApi,
   DesktopBrowserViewCreateArgs
@@ -21,7 +21,9 @@ export function useDesktopBrowserPage(
   const [error, setError] = useState<unknown>(null)
   const [generation, setGeneration] = useState(0)
   const current = useRef(args)
-  current.current = args
+  useLayoutEffect(() => {
+    current.current = args
+  }, [args])
   const retrying = useRef(false)
   const recover = useCallback(() => {
     if (retrying.current) {

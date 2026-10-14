@@ -63,7 +63,9 @@ export function DesktopBrowserPagePresenter({
     owner: () => presenter.current
   })
   const inputRef = useRef(input)
-  inputRef.current = input
+  useLayoutEffect(() => {
+    inputRef.current = input
+  }, [input])
   const releaseCapturedPointers = (): void => {
     const target = element.current
     if (target) {
