@@ -956,6 +956,12 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
+      # Forks may have no release tags. Fetch the official baselines into this
+      # disposable checkout so the same compatibility checks run on forks.
+      - name: Fetch official release history for forks
+        if: github.repository != 'stablyai/orca'
+        run: git fetch --filter=blob:none https://github.com/stablyai/orca.git 'refs/tags/*:refs/tags/*'
+
       - uses: ./.github/actions/install-node-dependencies
         with:
           native-runtime: node
