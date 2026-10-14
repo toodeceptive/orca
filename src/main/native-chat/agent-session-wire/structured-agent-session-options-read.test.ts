@@ -25,34 +25,47 @@ function restingRecord(): AgentSessionRecord {
 }
 
 describe('options at rest', () => {
-  it('answers while the first catalog listing is still running', async () => {
-    const record = restingRecord()
-    const probe = vi.fn(() => new Promise<AgentModelCatalogSuccess>(() => {}))
-    const modelCatalog = createAgentModelCatalogService({
-      store: new AgentModelCatalogStore(),
-      getRecord: () => record,
-      drivesRecord: () => true,
-      resolveAccountHome: async () => ({ variable: 'CODEX_HOME', path: '/homes/a' }),
-      probes: { codex: probe }
-    })
-    const resting = { child: null, params: { provider: 'codex' } }
-    // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the resting read touches only these members.
-    const context = {
-      deps: {
-        adapter: {},
-        agents: NO_STRUCTURED_AGENTS,
-        store: { getRecord: () => record },
-        modelCatalog
-      },
-      serialize: (_sessionId: string, task: () => Promise<unknown>) => task(),
-      openConversation: async () => resting,
-      conversation: async () => resting
-    } as unknown as StructuredAgentSessionMutationContext
+  it.each(['codex', 'omp', 'grok', 'opencode'] as const)(
+    'omits an unknown model for %s while the catalog is unavailable',
+    async (provider) => {
+      const record = { ...restingRecord(), provider }
+      const probe = vi.fn(() => new Promise<AgentModelCatalogSuccess>(() => {}))
+      const modelCatalog = createAgentModelCatalogService({
+        store: new AgentModelCatalogStore(),
+        getRecord: () => record,
+        drivesRecord: () => true,
+        resolveAccountHome: async () => ({ variable: 'CODEX_HOME', path: '/homes/a' }),
+        probes: { codex: probe }
+      })
+      const resting = {
+        child: null,
+        params: { provider: 'codex' },
+        journal: { context: { floor: () => null } }
+      }
+      // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the resting read touches only these members.
+      const context = {
+        deps: {
+          adapter: {},
+          agents: NO_STRUCTURED_AGENTS,
+          store: { getRecord: () => record },
+          modelCatalog
+        },
+        serialize: (_sessionId: string, task: () => Promise<unknown>) => task(),
+        openConversation: async () => resting,
+        conversation: async () => resting
+      } as unknown as StructuredAgentSessionMutationContext
 
-    const result = await readStructuredAgentSessionOptions(context, SESSION)
-    expect(probe).toHaveBeenCalledTimes(1)
-    expect(result.models).toEqual([])
-  })
+      const result = await readStructuredAgentSessionOptions(context, SESSION)
+      expect(probe).toHaveBeenCalledTimes(provider === 'codex' ? 1 : 0)
+      expect(result.models).toEqual([])
+      expect(result.current).not.toHaveProperty('model')
+      record.options = { model: 'later-model', effort: 'off' }
+      expect((await readStructuredAgentSessionOptions(context, SESSION)).current).toEqual({
+        model: 'later-model',
+        effort: 'off'
+      })
+    }
+  )
 })
 
 describe('live Codex option reads', () => {
@@ -63,6 +76,7 @@ describe('live Codex option reads', () => {
   ] as const)(
     'reads budget capability with goal support %s on %s while leaving the session lane free',
     async (threadGoal, provider, canChangeBudget) => {
+      const contextFloor = { epoch: 'journal-1', sequence: 12 }
       const listing = Promise.withResolvers<void>()
       const queue = new StructuredAgentSessionTaskQueue()
       const child = { fence: 7 }
@@ -77,7 +91,11 @@ describe('live Codex option reads', () => {
       const live = {
         child,
         params: { provider },
-        journal: { threadGoal: () => null, contextUsage: () => null }
+        journal: {
+          threadGoal: () => null,
+          contextUsage: () => null,
+          context: { floor: () => contextFloor }
+        }
       }
       // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: this read touches only the declared context fields.
       const context = {
@@ -104,14 +122,18 @@ describe('live Codex option reads', () => {
       await expect(reading).resolves.toMatchObject({ current: { model: 'gpt-live' } })
       expect(apply).toHaveBeenCalledOnce()
       expect((await reading).threadGoal).toEqual(
-        threadGoal ? { current: null, canChangeBudget } : undefined
+        threadGoal ? { current: null, canChangeBudget, contextFloor } : undefined
       )
     }
   )
 
   it('keeps a listing failure visible to the picker', async () => {
     const queue = new StructuredAgentSessionTaskQueue()
-    const live = { child: { fence: 7 }, params: { provider: 'codex' } }
+    const live = {
+      child: { fence: 7 },
+      params: { provider: 'codex' },
+      journal: { context: { floor: () => null } }
+    }
     const failure = new Error('model/list unavailable')
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the failed read ends before touching the remaining context fields.
     const context = {
@@ -143,7 +165,11 @@ describe('live Codex option reads', () => {
       await listing.promise
       return apply
     })
-    const live = { child: { fence: 7 }, params: { provider: 'codex' } }
+    const live = {
+      child: { fence: 7 },
+      params: { provider: 'codex' },
+      journal: { context: { floor: () => null } }
+    }
     // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: this read touches only the declared context fields.
     const context = {
       deps: {
@@ -163,7 +189,7 @@ describe('live Codex option reads', () => {
       live.child = { fence: 8 }
     })
     listing.resolve()
-    await expect(reading).resolves.toMatchObject({ current: { model: '' } })
+    expect((await reading).current).not.toHaveProperty('model')
     expect(apply).not.toHaveBeenCalled()
   })
 })

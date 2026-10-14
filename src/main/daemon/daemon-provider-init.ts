@@ -1,4 +1,8 @@
 import { getLocalPtyProvider, rebindLocalProviderListeners } from '../ipc/pty'
+import {
+  confirmSeededClaudeLivePtys,
+  hasSeededUnconfirmedClaudePtys
+} from '../claude-accounts/live-pty-gate'
 import { isStartupDiagnosticsEnabled, logStartupDiagnostic } from '../startup/startup-diagnostics'
 import { checkDaemonHealth } from './daemon-health'
 import { collectPinnedDaemonVersions, pruneOldDaemonHosts } from './daemon-host-relocation'
@@ -18,7 +22,7 @@ import {
   createOutOfProcessLauncher,
   type DaemonLaunchPolicy
 } from './daemon-out-of-process-launcher'
-import type { DaemonProvider } from './daemon-provider-routing'
+import { listEveryDaemonGeneration, type DaemonProvider } from './daemon-provider-routing'
 import { installDaemonProvider } from './daemon-provider-state'
 import { DegradedDaemonPtyProvider } from './degraded-daemon-pty-provider'
 import { trackDaemonAdopted } from './daemon-adoption-telemetry-event'
@@ -159,6 +163,7 @@ export async function initDaemonPtyProvider(
   if (process.platform === 'darwin' && newSpawner.getHandle()?.adopted) {
     void reportDaemonAdoption(runtimeDir, info.socketPath, info.tokenPath, newAdapter)
   }
+  await reconcileSeededClaudeLivePtys(routedAdapter)
 }
 
 // Why off the init path: this is measurement of an adopted daemon (#17696), and neither its probes nor their failure may delay or fail startup.
@@ -183,5 +188,25 @@ async function reportDaemonAdoption(
     )
   } catch {
     // Best-effort measurement only.
+  }
+}
+
+// Why: release gate ids only for daemon-confirmed-dead sessions; keep seeds on listing failure since releasing early can rotate a live CLI's refresh token.
+async function reconcileSeededClaudeLivePtys(provider: DaemonProvider): Promise<void> {
+  if (!hasSeededUnconfirmedClaudePtys()) {
+    return
+  }
+  try {
+    const ids = await listEveryDaemonGeneration(provider, async (a) =>
+      (await a.listSessions()).map((s) => s.sessionId)
+    )
+    if (!ids) {
+      console.warn('[daemon] Keeping seeded Claude live-PTY gate — session listing failed')
+      return
+    }
+    confirmSeededClaudeLivePtys(ids)
+  } catch (error) {
+    // Why: gate bookkeeping must never fail daemon init; stale seeds only defer a usage refresh until next restart.
+    console.warn('[daemon] Failed to reconcile seeded Claude live-PTY gate:', error)
   }
 }

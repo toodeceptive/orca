@@ -1,7 +1,7 @@
 // `agentSession.queuedMessageSend` / `agentSession.queuedMessageDelete`, and
-// /clear's carry of the source's drafts to its replacement session. Settling
+// mutations of the conversation's queued drafts. Settling
 // operations stamp op-scoped tombstone receipts, so a lost acknowledgement
-// replays from the rows themselves — never from the operation ledger, which
+// replays from the rows themselves â€” never from the operation ledger, which
 // records only that an operation happened. No mutation returns draft text:
 // the published list is the one authority a client renders.
 
@@ -23,12 +23,10 @@ import {
 import type { QueuedMessageRow } from '../agent-session-journal/queued-message-table'
 import type { MutationPlan } from './structured-agent-session-mutation-plans'
 import { structuredQueueHold } from './structured-agent-session-queued-messages'
-import { agentSessionSendBodyFingerprint } from '../../../shared/structured-agent-session-send-mutation'
 import {
   resumeStructuredQueue,
   structuredAgentSessionHostInstance
 } from './structured-agent-session-queued-pause'
-import { unsettledQueuedMessages } from './structured-agent-session-queued-stop'
 import {
   mutateStructuredAgentSession,
   type StructuredAgentSessionMutationContext
@@ -72,68 +70,6 @@ export async function withdrawQueuedMessagesForOperation(
   })
 }
 
-/**
- * /clear's carry: the source's unsettled drafts become rows on the replacement
- * session — the SAME for every client version, with no text on the wire — so the
- * cards stay visible where the user now is. The replacement's queue starts
- * paused ('cleared'), lifted exactly like a Stop's: the cards were written for the context /clear just
- * discarded, so they wait for the user's next turn there, or Resume, rather than
- * sending into the fresh context unasked. Each card records the conversation it
- * came from, which IS that pause, so the drain never sees a carried card unpaused
- * and no pause outlives the cards. Runs after the clear commits, opening the
- * replacement's conversation only when there are drafts to carry; the source
- * rows are then tombstoned. Bookkeeping around the clear: a failure, or a crash
- * before the carry, leaves the cards on the superseded source — whose
- * supersession fence already blocks the drain — reported, never gating the
- * clear. A crash between the copy and the tombstone leaves both, which the
- * fence also makes harmless: nothing is lost and nothing runs.
- */
-export async function carryQueuedMessagesToClearReplacement(
-  ctx: AgentSessionTurnContext,
-  input: {
-    replacementSessionId: string
-    openReplacementJournal: () => Promise<AgentSessionJournal | undefined>
-    callerKey: string
-    operationId: string
-  }
-): Promise<void> {
-  try {
-    const rows = unsettledQueuedMessages(ctx.journal)
-    if (rows.length === 0) {
-      return
-    }
-    const replacement = await input.openReplacementJournal()
-    if (!replacement) {
-      throw new Error('the replacement journal is not open')
-    }
-    for (const row of rows) {
-      // A returned card carries over as a plain waiting draft — its refusal
-      // belonged to the source's submissions. The fingerprint is re-scoped to the
-      // replacement, or its echo could never alias the sent bubble.
-      await replacement.queuedMessages.insert({
-        messageId: row.messageId,
-        body: row.body,
-        fingerprint: agentSessionSendBodyFingerprint(input.replacementSessionId, row.body),
-        hostInstance: structuredAgentSessionHostInstance(),
-        carriedFrom: ctx.sessionId
-      })
-    }
-    await withdrawQueuedMessagesForOperation(ctx.journal, {
-      sessionId: ctx.sessionId,
-      messageIds: rows.map((row) => row.messageId),
-      callerKey: input.callerKey,
-      operationId: input.operationId
-    })
-  } catch (error) {
-    ctx.logger.warn("carrying queued drafts to /clear's replacement failed", {
-      scope: 'clear-queued-carry',
-      sessionId: ctx.sessionId,
-      replacementSessionId: input.replacementSessionId,
-      error
-    })
-  }
-}
-
 /** Draft actions run like any mutation: admitted on the session's lane, the
  *  conversation opened for the write. */
 function mutateQueued<TValue>(
@@ -166,8 +102,8 @@ async function refusingNewerOrcaJournal<TValue>(
 }
 
 /**
- * Send-now. It overrides ONLY queue policy — FIFO order, pause, the busy-turn
- * wait — through the same send block and pending-prompt gates as any send;
+ * Send-now. It overrides ONLY queue policy â€” FIFO order, pause, the busy-turn
+ * wait â€” through the same send block and pending-prompt gates as any send;
  * supersession, Stop and prepared commands are never overridden. The card goes
  * out under this operation's id, never its own, and the submission names it by
  * `queuedMessageId`; one id still means one delivery.
@@ -208,11 +144,16 @@ export function sendQueuedStructuredAgentMessage(
         return invalid('This queued message was withdrawn.')
       }
       if (row.state === 'dispatched') {
-        // Already a submission — answer with it rather than sending twice.
+        // Already a submission â€” answer with it rather than sending twice.
         const submission = row.consumedAs === null ? undefined : submissionFor(ctx, row.consumedAs)
         return submission
           ? { ok: true, value: { clientMessageId: submission.clientMessageId, submission } }
           : invalid('This queued message was already sent.')
+      }
+      // A command never steers: handed over mid-turn it would only be refused. Clients offer its
+      // Send only while the agent is idle; this answers an older one that offers it mid-turn.
+      if (hold === 'working' && row.body.command) {
+        return invalid("A command can't be sent while the agent is working.")
       }
       const submissionId = operationId
       try {
@@ -287,7 +228,7 @@ export function deleteQueuedStructuredAgentMessage(
         return { ok: true, value: { deleted: false, messageId, disposition: 'withdrawn' } }
       }
       // The withdrawal notifies through the journal's commit listener, which
-      // also re-derives the drain — deleting a returned card can unblock the
+      // also re-derives the drain â€” deleting a returned card can unblock the
       // drafts behind it.
       const withdrawn = await withdrawQueuedMessagesForOperation(ctx.journal, {
         sessionId: ctx.sessionId,
@@ -309,7 +250,7 @@ export function deleteQueuedStructuredAgentMessage(
   return mutateQueued(context, caller, params.envelope, plan)
 }
 
-/** Resume: ends the queue's pause — a Stop's, or a restart's — so the cards send
+/** Resume: ends the queue's pause â€” a Stop's, or a restart's â€” so the cards send
  *  again, oldest first, as the session goes idle. A no-op when nothing is paused,
  *  and a per-card hold (`send_failed`, `kept`) stays for its own Send. */
 export function resumeStructuredAgentQueue(

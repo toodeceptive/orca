@@ -227,7 +227,7 @@ export function createBrowserTabActions(
       get().createBrowserTab(worktreeId, defaultUrl, {
         title: translate('auto.store.slices.browser.d175274b6d', 'New Browser Tab'),
         focusAddressBar: true,
-        ...(runtimeEnvironmentId ? { browserRuntimeEnvironmentId: null } : {}),
+        browserRuntimeEnvironmentId: null,
         targetGroupId: groupId
       })
       get().recordFeatureInteraction('browser-tab-created')
@@ -270,7 +270,7 @@ export function createBrowserTabActions(
       get().createBrowserTab(worktreeId, url, {
         activate: true,
         sessionProfileId: profileId,
-        ...(runtimeEnvironmentId ? { browserRuntimeEnvironmentId: null } : {})
+        browserRuntimeEnvironmentId: null
       })
       return true
     }

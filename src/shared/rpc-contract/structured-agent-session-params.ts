@@ -300,40 +300,46 @@ export const ModelCatalogParams = z.strictObject({
   agent: StructuredAgent,
   sessionId: SessionId.optional(),
   worktree: Identifier('Invalid worktree selector').optional(),
-  waitForListing: z.boolean().optional()
+  waitForListing: z.boolean().optional(),
+  // Answer only from what the host has saved; never start a listing. Sent only to a host advertising
+  // the saved-only capability: an older one refuses the unknown key.
+  savedOnly: z.boolean().optional()
 })
 
 export const ConversationCommandParams = z
   .object({
     envelope: MutationEnvelope,
-    command: z.enum(['clear', 'compact'])
+    command: z.enum(['clear', 'compact']),
+    /** A /compact while the agent is working waits as a host-held card, like a queued send.
+     *  Strict object, so an older host refuses it: clients send it only when
+     *  `agent-session.queued-commands.v1` is advertised. A /clear never waits: its operation
+     *  fingerprints no `delivery`, so one sent with it is refused as a conflict. */
+    delivery: z.literal('queue-if-active').optional()
   })
   .strict()
 
-export const ThreadGoalParams = z
-  .object({
-    envelope: MutationEnvelope,
-    change: z.discriminatedUnion('kind', [
-      z
-        .object({
-          kind: z.literal('set'),
-          objective: z
-            .string()
-            .max(AGENT_SESSION_THREAD_GOAL_OBJECTIVE_MAX_LENGTH)
-            .refine((value) => value.trim().length > 0, 'Objective is empty')
-        })
-        .strict(),
-      z.object({ kind: z.literal('status'), status: z.enum(['active', 'paused']) }).strict(),
-      z
-        .object({
-          kind: z.literal('budget'),
-          tokenBudget: z.number().int().positive().max(Number.MAX_SAFE_INTEGER)
-        })
-        .strict(),
-      z.object({ kind: z.literal('clear') }).strict()
-    ])
-  })
-  .strict()
+export const ThreadGoalParams = z.strictObject({
+  envelope: MutationEnvelope,
+  change: z.discriminatedUnion('kind', [
+    z
+      .object({
+        kind: z.literal('set'),
+        objective: z
+          .string()
+          .max(AGENT_SESSION_THREAD_GOAL_OBJECTIVE_MAX_LENGTH)
+          .refine((value) => value.trim().length > 0, 'Objective is empty')
+      })
+      .strict(),
+    z.object({ kind: z.literal('status'), status: z.enum(['active', 'paused']) }).strict(),
+    z
+      .object({
+        kind: z.literal('budget'),
+        tokenBudget: z.number().int().positive().max(Number.MAX_SAFE_INTEGER)
+      })
+      .strict(),
+    z.object({ kind: z.literal('clear') }).strict()
+  ])
+})
 
 /** One surface's claim on one session. The id names the surface, not the client: two chat views
  *  looking at the same session are two holders, and either leaving must not release

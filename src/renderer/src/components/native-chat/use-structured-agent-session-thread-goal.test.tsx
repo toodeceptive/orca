@@ -5,6 +5,7 @@ import type {
   AgentJournalRenderItem,
   AgentJournalThreadGoal
 } from '../../../../shared/agent-session-journal-types'
+import type { AgentSessionOptionsResult } from '../../../../shared/agent-session-wire'
 import type { StructuredAgentSessionMutate } from './use-structured-agent-session-mutate'
 import { useStructuredAgentSessionThreadGoal } from './use-structured-agent-session-thread-goal'
 
@@ -105,6 +106,58 @@ describe('useStructuredAgentSessionThreadGoal', () => {
     // A clear in the window outranks a host answer read before it.
     const cleared = harness({ journalItems: [clearedRow(2)], support: { current: older } })
     expect(cleared.result.current?.goal).toBeNull()
+  })
+
+  it('keeps context floors and changing budget capability independent while an edit is pending', async () => {
+    const reply = Promise.withResolvers<{ change: 'budget' }>()
+    const { mutate, calls } = mutateWith(() => reply.promise)
+    const journalItems = [goalRow(2, GOAL)]
+    const support: NonNullable<AgentSessionOptionsResult['threadGoal']> = {
+      current: null,
+      contextFloor: { epoch: 'old-journal', sequence: 3 },
+      canChangeBudget: false
+    }
+    const { result, rerender } = renderHook(
+      (props: { support: typeof support; journalEpoch: string }) =>
+        useStructuredAgentSessionThreadGoal({ journalItems, mutate, ...props }),
+      { initialProps: { support, journalEpoch: 'old-journal' } }
+    )
+    expect(result.current?.goal).toBeNull()
+    await act(async () => {
+      await expect(result.current!.change({ kind: 'budget', tokenBudget: 40_000 })).resolves.toBe(
+        false
+      )
+    })
+    expect(calls).not.toHaveBeenCalled()
+
+    rerender({ support: { ...support, canChangeBudget: true }, journalEpoch: 'new-journal' })
+    expect(result.current?.goal).toEqual(GOAL)
+    let pending: Promise<boolean> = Promise.resolve(false)
+    act(() => {
+      pending = result.current!.change({ kind: 'budget', tokenBudget: 40_000 })
+    })
+    expect(result.current?.pending).toBe(true)
+    rerender({ support, journalEpoch: 'new-journal' })
+    expect(result.current?.canChangeBudget).toBe(false)
+    expect(result.current?.goal).toEqual(GOAL)
+    await act(async () => {
+      await expect(result.current!.change({ kind: 'budget', tokenBudget: 50_000 })).resolves.toBe(
+        false
+      )
+    })
+    expect(calls).toHaveBeenCalledExactlyOnceWith(
+      'agentSession.threadGoal',
+      'agentSession.threadGoal',
+      { change: { kind: 'budget', tokenBudget: 40_000 } }
+    )
+    await act(async () => reply.resolve({ change: 'budget' }))
+    await expect(pending).resolves.toBe(true)
+    expect(result.current?.pending).toBe(false)
+    rerender({
+      support: { ...support, contextFloor: { epoch: 'new-journal', sequence: 3 } },
+      journalEpoch: 'new-journal'
+    })
+    expect(result.current?.goal).toBeNull()
   })
 
   it('serializes changes: a second submit while one is unsettled is answered false, not sent', async () => {
