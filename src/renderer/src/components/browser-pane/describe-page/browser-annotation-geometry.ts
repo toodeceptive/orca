@@ -103,10 +103,11 @@ export function getBrowserOverlayAnchor(
   payload: BrowserGrabPayload,
   container: OverlayRectSource | null,
   webview: OverlayRectSource | null,
-  viewport: BrowserOverlayViewport
+  viewport: BrowserOverlayViewport,
+  surfaceBounds?: { left: number; top: number } | null
 ): BrowserOverlayAnchor {
   const containerRect = container?.getBoundingClientRect()
-  const webviewRect = webview?.getBoundingClientRect()
+  const webviewRect = surfaceBounds ?? webview?.getBoundingClientRect()
   const rect = getLiveBrowserAnnotationRect(payload, viewport)
   const offsetX = (webviewRect?.left ?? 0) - (containerRect?.left ?? 0)
   const offsetY = (webviewRect?.top ?? 0) - (containerRect?.top ?? 0)

@@ -71,6 +71,7 @@ function renderLoadedChatThenFailedRead(
       updatedAt: 1
     },
     pending: false,
+    canChangeBudget: false,
     change: vi.fn()
   }
   mocks.queuedCards = [

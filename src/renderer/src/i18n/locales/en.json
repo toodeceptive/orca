@@ -56,6 +56,7 @@
     }
   },
   "browser": {
+    "pageContent": "Browser page",
     "loadFailure": {
       "connectionNotSecure": "Connection isn't secure",
       "cantReachHost": "Can't reach {{value0}}",
@@ -81,7 +82,9 @@
     },
     "guestRecovery": {
       "title": "Browser page stopped",
-      "failed": "The browser page stopped unexpectedly. Retry to restore it."
+      "failed": "The browser page stopped unexpectedly. Retry to restore it.",
+      "openFailed": "The browser page could not be opened.",
+      "unresponsive": "The browser page stopped responding ({{reason}})."
     },
     "clientHosted": {
       "preparationFailed": "Couldn't start the remote browser on this desktop. Check the paired connection and try again.",
@@ -18606,6 +18609,10 @@
         "paused": "Paused goal",
         "blocked": "Goal blocked",
         "limited": "Goal limited",
+        "totalTokenBudget": "Total token budget",
+        "tokensUsed": "Tokens used",
+        "budgetAboveUsage": "Enter a whole-number total above usage. Saving keeps the current goal and status.",
+        "applyBudget": "Apply budget",
         "attachmentsUnsupported": "Remove attachments before setting a goal."
       },
       "fileLinks": {

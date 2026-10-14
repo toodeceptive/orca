@@ -270,7 +270,6 @@ jobs:
         if: needs.code_paths.outputs.static_analysis == 'true'
         run: |
           pnpm run check:reliability-gates
-          pnpm run check:process-host-imports
 
       - name: Enforce dead design-system classes
         if: needs.code_paths.outputs.static_analysis == 'true'
@@ -958,6 +957,12 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
+      # Forks may have no release tags. Fetch the official baselines into this
+      # disposable checkout so the same compatibility checks run on forks.
+      - name: Fetch official release history for forks
+        if: github.repository != 'stablyai/orca'
+        run: git fetch --filter=blob:none https://github.com/stablyai/orca.git 'refs/tags/*:refs/tags/*'
+
       - uses: ./.github/actions/install-node-dependencies
         with:
           native-runtime: node
@@ -1010,10 +1015,6 @@ jobs:
 
       - name: Smoke managed-hook companions
         run: node config/scripts/smoke-managed-hook-runtime-node18.mjs
-
-      # The process-host package declares engines >=18; load its staged public output on Node 18.
-      - name: Smoke process-host package
-        run: node config/scripts/smoke-process-host-node18.mjs
 
   package:
     name: package
@@ -1258,9 +1259,9 @@ jobs:
           src/main/persistence/profile-state/profile-state-writer-stall.electron.test.ts
           src/main/providers/windows-conpty-wide-char-duplication.node-pty.test.ts
           src/main/providers/pty-repaint-wide-char-buffer.node-pty.test.ts
-          src/shared/__tests__/process-host/windows-command-line.win32.test.ts
-          src/shared/__tests__/process-host/windows-cmd-shim-resolution.test.ts
-          src/shared/__tests__/process-host/windows-cmd-shim-resolution.win32.test.ts
+          src/shared/child-process/windows-command-line.win32.test.ts
+          src/shared/child-process/windows-cmd-shim-resolution.test.ts
+          src/shared/child-process/windows-cmd-shim-resolution.win32.test.ts
           src/main/agent-hooks/windows-hook-payload-delivery.test.ts
           src/main/jcode/hook-gate-script.test.ts
           src/main/agent-hooks/windows-direct-cmd-hook-command.test.ts

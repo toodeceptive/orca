@@ -1,7 +1,7 @@
 // `agentSession.queuedMessageSend` / `agentSession.queuedMessageDelete`, and
 // mutations of the conversation's queued drafts. Settling
 // operations stamp op-scoped tombstone receipts, so a lost acknowledgement
-// replays from the rows themselves — never from the operation ledger, which
+// replays from the rows themselves â€” never from the operation ledger, which
 // records only that an operation happened. No mutation returns draft text:
 // the published list is the one authority a client renders.
 
@@ -102,8 +102,8 @@ async function refusingNewerOrcaJournal<TValue>(
 }
 
 /**
- * Send-now. It overrides ONLY queue policy — FIFO order, pause, the busy-turn
- * wait — through the same send block and pending-prompt gates as any send;
+ * Send-now. It overrides ONLY queue policy â€” FIFO order, pause, the busy-turn
+ * wait â€” through the same send block and pending-prompt gates as any send;
  * supersession, Stop and prepared commands are never overridden. The card goes
  * out under this operation's id, never its own, and the submission names it by
  * `queuedMessageId`; one id still means one delivery.
@@ -144,7 +144,7 @@ export function sendQueuedStructuredAgentMessage(
         return invalid('This queued message was withdrawn.')
       }
       if (row.state === 'dispatched') {
-        // Already a submission — answer with it rather than sending twice.
+        // Already a submission â€” answer with it rather than sending twice.
         const submission = row.consumedAs === null ? undefined : submissionFor(ctx, row.consumedAs)
         return submission
           ? { ok: true, value: { clientMessageId: submission.clientMessageId, submission } }
@@ -228,7 +228,7 @@ export function deleteQueuedStructuredAgentMessage(
         return { ok: true, value: { deleted: false, messageId, disposition: 'withdrawn' } }
       }
       // The withdrawal notifies through the journal's commit listener, which
-      // also re-derives the drain — deleting a returned card can unblock the
+      // also re-derives the drain â€” deleting a returned card can unblock the
       // drafts behind it.
       const withdrawn = await withdrawQueuedMessagesForOperation(ctx.journal, {
         sessionId: ctx.sessionId,
@@ -250,7 +250,7 @@ export function deleteQueuedStructuredAgentMessage(
   return mutateQueued(context, caller, params.envelope, plan)
 }
 
-/** Resume: ends the queue's pause — a Stop's, or a restart's — so the cards send
+/** Resume: ends the queue's pause â€” a Stop's, or a restart's â€” so the cards send
  *  again, oldest first, as the session goes idle. A no-op when nothing is paused,
  *  and a per-card hold (`send_failed`, `kept`) stays for its own Send. */
 export function resumeStructuredAgentQueue(

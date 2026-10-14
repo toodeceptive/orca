@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import type { WebContents } from 'electron'
 import type { BrowserManagerMocks } from './browser-manager-test-harness'
 
 export const GUEST_ELECTRON_UA =
@@ -31,7 +32,7 @@ async function rejectInvalidTouchPoints(
 }
 
 export type ViewportGuestHandle = {
-  guest: Record<string, unknown>
+  guest: Record<string, unknown> & Pick<WebContents, 'id'>
   debuggerSendCommand: ReturnType<typeof vi.fn>
   debuggerIsAttached: ReturnType<typeof vi.fn>
   debuggerAttach: ReturnType<typeof vi.fn>

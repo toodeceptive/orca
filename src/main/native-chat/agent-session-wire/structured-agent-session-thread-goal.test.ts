@@ -344,3 +344,61 @@ describe('threadGoalPlan replay', () => {
     expect(journalRecordsThreadGoalChange(null, pause)).toBe(false)
   })
 })
+
+describe('budget-only thread goal change', () => {
+  it('uses the existing adapter without replacing or re-journaling the objective', async () => {
+    const journal = await openJournal()
+    await appendGoalRow(journal, { tokenBudget: 20_000, tokensUsed: 12_345 })
+    const before = journal.threadGoal()
+    const changeThreadGoal = vi.fn(async () => ({ ok: true as const }))
+    const result = await performThreadGoalChange(context(journal, { changeThreadGoal }), {
+      clientOperationId: 'budget-edit',
+      change: { kind: 'budget', tokenBudget: 40_000 }
+    })
+    expect(result).toEqual({ ok: true, value: { change: 'budget' } })
+    expect(changeThreadGoal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        change: { kind: 'budget', tokenBudget: 40_000 },
+        replacesGoal: false
+      })
+    )
+    expect(journal.threadGoal()).toEqual(before)
+    expect(journal.snapshot().items.filter((item) => item.body.kind === 'message')).toHaveLength(0)
+  })
+  it.each([
+    ['absent goal', null],
+    ['matching cap', { tokenBudget: 40_000 }],
+    ['differing cap', { tokenBudget: 20_000 }],
+    ['replacement goal', { objective: 'A replacement goal', createdAt: 5_000, tokenBudget: 40_000 }]
+  ] as const)(
+    'refuses unknown budget replay with %s without provider calls',
+    async (_name, overrides) => {
+      const journal = await openJournal()
+      if (overrides) {
+        await appendGoalRow(journal, { tokensUsed: 12_345, status: 'paused', ...overrides })
+      }
+      const before = journal.threadGoal()
+      const changeThreadGoal = vi.fn(async () => ({ ok: true as const }))
+      const ctx = context(journal, { changeThreadGoal })
+      const plan = threadGoalPlan({
+        envelope: {
+          sessionId: 'session-1',
+          clientOperationId: 'budget-replay',
+          expectedRuntimeFence: 1,
+          payloadFingerprint: 'fp'
+        },
+        change: { kind: 'budget', tokenBudget: 40_000 }
+      })
+      expect(journalRecordsThreadGoalChange(before, { kind: 'budget', tokenBudget: 40_000 })).toBe(
+        false
+      )
+      expect(plan.replay(ctx, { status: 'unknown' })).toBeNull()
+      expect(plan.rerunWhenReplayMissing?.(ctx)).toBe(false)
+      expect(changeThreadGoal).not.toHaveBeenCalled()
+      expect(journal.threadGoal()).toEqual(before)
+      expect(plan.replay(ctx, { status: 'succeeded', sessionId: 'session-1' })).toEqual({
+        change: 'budget'
+      })
+    }
+  )
+})
