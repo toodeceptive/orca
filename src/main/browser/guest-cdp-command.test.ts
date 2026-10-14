@@ -6,6 +6,7 @@ import { sendGuestCdpCommand } from './guest-cdp-command'
 function makeGuest(state: { crashed?: boolean; destroyed?: boolean } = {}) {
   const sendCommand = vi.fn(async () => ({ ok: true }))
   const guest = {
+    id: 1,
     isDestroyed: vi.fn(() => state.destroyed ?? false),
     isCrashed: vi.fn(() => {
       if (state.destroyed) {

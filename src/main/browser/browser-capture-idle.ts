@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks'
+import type { WebContents } from 'electron'
 
 type CaptureState = {
   pending: Set<Promise<unknown>>
@@ -8,7 +9,7 @@ type CaptureState = {
   reservation: BrowserCaptureReservation | null
 }
 
-type CaptureTarget = object
+type CaptureTarget = Pick<WebContents, 'id'>
 
 type CaptureOperation = {
   target: CaptureTarget

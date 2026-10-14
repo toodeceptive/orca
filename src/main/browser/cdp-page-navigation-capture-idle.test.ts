@@ -10,6 +10,7 @@ const client = {} as WebSocket
 
 function createReloadFixture() {
   const guest = Object.assign(new EventEmitter(), {
+    id: 1,
     isDestroyed: vi.fn(() => false),
     reload: vi.fn(),
     reloadIgnoringCache: vi.fn()

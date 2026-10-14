@@ -44,7 +44,7 @@ type ServiceFixtureGuest = OwnedViewFixture['guest'] & {
 export type DesktopBrowserViewServiceFixture = {
   service: DesktopBrowserViewService
   sender: WebContents
-  senderShape: EventEmitter & {
+  senderFixture: EventEmitter & {
     id: number
     isDestroyed: () => boolean
     getZoomFactor: () => number
@@ -108,7 +108,7 @@ export function createDesktopBrowserViewServiceFixture({
     findInPage: vi.fn(() => 12),
     stopFindInPage: vi.fn()
   })
-  const senderShape = Object.assign(new EventEmitter(), {
+  const senderFixture = Object.assign(new EventEmitter(), {
     id: 8,
     isDestroyed: () => false,
     getZoomFactor: () => 2,
@@ -117,15 +117,15 @@ export function createDesktopBrowserViewServiceFixture({
     })
   })
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: service tests supply all renderer identity, event, zoom and focus APIs they exercise.
-  const sender = senderShape as unknown as WebContents
+  const sender = senderFixture as unknown as WebContents
   const host = createOwnedViewHost()
-  const ownerShape = {
+  const ownerFixture = {
     ...host,
     webContents: sender,
     getContentBounds: () => ({ x: 20, y: 40, width: 900, height: 650 })
   }
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the service uses only this host's contents, child views, destruction state and content bounds.
-  const owner = ownerShape as unknown as BrowserWindow
+  const owner = ownerFixture as unknown as BrowserWindow
   const registered = new Map<string, number>()
   const registerOwnedView = vi.fn((record: DesktopOwnedBrowserViewRecord) => {
     order.push('register')
@@ -183,7 +183,7 @@ export function createDesktopBrowserViewServiceFixture({
   return {
     service,
     sender,
-    senderShape,
+    senderFixture,
     guest,
     native,
     owner,

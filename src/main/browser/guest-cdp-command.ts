@@ -10,7 +10,7 @@ const VIEW_RESIZING_CDP_METHODS: ReadonlySet<string> = new Set([
   'Emulation.setVisibleSize'
 ])
 
-type GuestCdpTarget = Pick<WebContents, 'isDestroyed' | 'isCrashed'> & {
+type GuestCdpTarget = Pick<WebContents, 'id' | 'isDestroyed' | 'isCrashed'> & {
   debugger: Pick<WebContents['debugger'], 'sendCommand'>
 }
 

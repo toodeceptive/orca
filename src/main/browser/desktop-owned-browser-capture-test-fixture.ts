@@ -96,11 +96,11 @@ export function createOwnedBrowserCaptureFixture(): OwnedBrowserCaptureFixture {
     capturePage: vi.fn(),
     debugger: { isAttached: () => true, attach: vi.fn(), detach: vi.fn(), sendCommand }
   })
-  const ownerShape = {
+  const ownerFixture = {
     ...fixture.host,
     getBounds: () => ({ x: 30, y: 60, width: 1200, height: 800 })
   }
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: capture reads owner lifetime; fixture supplies child attachment.
-  const owner = ownerShape as unknown as BrowserWindow
+  const owner = ownerFixture as unknown as BrowserWindow
   return { ...fixture, guest, owner, properties, captures, sendCommand }
 }

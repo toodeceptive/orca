@@ -17,9 +17,22 @@ function deferred<T>(): {
 }
 
 describe('BrowserCaptureIdle', () => {
+  it('keeps reservations scoped to the exact contents object when IDs match', async () => {
+    const idle = new BrowserCaptureIdle()
+    const target = { id: 1 }
+    const replacement = { id: 1 }
+    const reservation = await idle.reserve(target)
+
+    expect(() => idle.assertCaptureAllowed(target)).toThrow('reserved')
+    expect(() => idle.assertCaptureAllowed(replacement)).not.toThrow()
+    expect(() => idle.assertCaptureAllowed(replacement, reservation)).toThrow('not active')
+
+    reservation.release()
+  })
+
   it('queues capture admission until the lifecycle reservation is released', async () => {
     const idle = new BrowserCaptureIdle()
-    const target = {}
+    const target = { id: 1 }
     const lease = await idle.reserve(target)
     let ran = false
     const queued = idle.runWhenCaptureAllowed(target, async () => {
@@ -35,7 +48,7 @@ describe('BrowserCaptureIdle', () => {
 
   it('rechecks admission when another reservation is taken before a queued capture resumes', async () => {
     const idle = new BrowserCaptureIdle()
-    const target = {}
+    const target = { id: 1 }
     const lease = await idle.reserve(target)
     let ran = false
     const queued = idle.runWhenCaptureAllowed(target, async () => {
@@ -52,7 +65,7 @@ describe('BrowserCaptureIdle', () => {
 
   it('remains busy after a primary caller settles until its native operation actually settles', async () => {
     const idle = new BrowserCaptureIdle()
-    const webContents = {}
+    const webContents = { id: 1 }
     const primary = deferred<void>()
     const native = deferred<void>()
     idle.trackPrimary(webContents, primary.promise)
@@ -70,7 +83,7 @@ describe('BrowserCaptureIdle', () => {
 
   it('releases waiters after a rejected native operation settles', async () => {
     const idle = new BrowserCaptureIdle()
-    const webContents = {}
+    const webContents = { id: 1 }
     const native = deferred<void>()
     idle.trackNative(webContents, native.promise)
     const settled = idle.waitForIdle(webContents)
@@ -81,7 +94,7 @@ describe('BrowserCaptureIdle', () => {
 
   it('blocks a new capture atomically while a lifecycle reservation waits for prior work', async () => {
     const idle = new BrowserCaptureIdle()
-    const webContents = {}
+    const webContents = { id: 1 }
     const primary = deferred<void>()
     idle.trackPrimary(webContents, primary.promise)
     const reservation = idle.reserve(webContents)
@@ -96,7 +109,7 @@ describe('BrowserCaptureIdle', () => {
 
   it('admits only the exact reservation token to a reserved capture', async () => {
     const idle = new BrowserCaptureIdle()
-    const webContents = {}
+    const webContents = { id: 1 }
     const reservation = await idle.reserve(webContents)
 
     expect(() => idle.assertCaptureAllowed(webContents)).toThrow('reserved')
@@ -112,7 +125,7 @@ describe('BrowserCaptureIdle', () => {
 
   it('keeps an admitted operation busy across asynchronous stages with no native promise yet', async () => {
     const idle = new BrowserCaptureIdle()
-    const target = {}
+    const target = { id: 1 }
     const layout = deferred<void>()
     const frame = deferred<void>()
     const operation = idle.runCapture(target, async () => {
@@ -139,7 +152,7 @@ describe('BrowserCaptureIdle', () => {
 
   it('cannot release a reservation while its authorized operation is active', async () => {
     const idle = new BrowserCaptureIdle()
-    const target = {}
+    const target = { id: 1 }
     const lease = await idle.reserve(target)
     const work = deferred<void>()
     const running = idle.runReservedCapture(target, lease, () => work.promise)
@@ -151,7 +164,7 @@ describe('BrowserCaptureIdle', () => {
 
   it('lets a pre-reservation operation issue later work, but denies a new caller', async () => {
     const idle = new BrowserCaptureIdle()
-    const target = {}
+    const target = { id: 1 }
     const continueOuter = deferred<void>()
     const outer = idle.runCapture(target, async () => {
       await continueOuter.promise
@@ -168,7 +181,7 @@ describe('BrowserCaptureIdle', () => {
 
   it('does not let a timer inherit admission after its outer operation retires', async () => {
     const idle = new BrowserCaptureIdle()
-    const target = {}
+    const target = { id: 1 }
     let afterReturn!: Promise<void>
     await idle.runCapture(target, async () => {
       afterReturn = new Promise((resolve) => {
@@ -186,7 +199,7 @@ describe('BrowserCaptureIdle', () => {
 
   it('rejects a forged reservation even inside an operation admitted before reserve', async () => {
     const idle = new BrowserCaptureIdle()
-    const target = {}
+    const target = { id: 1 }
     const continueOuter = deferred<void>()
     const outer = idle.runCapture(target, async () => {
       await continueOuter.promise

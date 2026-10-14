@@ -26,7 +26,7 @@ const contentsById = new Map<number, unknown>()
 function rig(id = 7, type = 'window', pageId = 'owned-page') {
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: this fixture only compares Session identity; no Session method is called.
   const session = {} as Session
-  const shape = {
+  const guestFixture = {
     id,
     isDestroyed: () => false,
     getType: () => type,
@@ -37,7 +37,7 @@ function rig(id = 7, type = 'window', pageId = 'owned-page') {
     off: vi.fn()
   }
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the mock implements the policy/registration APIs exercised by this suite.
-  const guest = shape as unknown as WebContents
+  const guest = guestFixture as unknown as WebContents
   const renderer = {
     id: 8,
     isDestroyed: () => false,
@@ -66,7 +66,7 @@ function rig(id = 7, type = 'window', pageId = 'owned-page') {
     sessionProfileId: 'profile',
     rendererWebContentsId: 8
   })
-  return { guest, shape, renderer, view, host, record }
+  return { guest, guestFixture, renderer, view, host, record }
 }
 
 describe('BrowserManager.registerOwnedView', () => {
@@ -142,7 +142,7 @@ describe('BrowserManager.registerOwnedView', () => {
         rendererWebContentsId: 8
       })
     ).toBe(true)
-    fixture.shape.off.mockClear()
+    fixture.guestFixture.off.mockClear()
     expect(
       browserManager.registerGuest({
         browserPageId: 'legacy-page',
@@ -150,7 +150,7 @@ describe('BrowserManager.registerOwnedView', () => {
         rendererWebContentsId: 8
       })
     ).toBe(false)
-    expect(fixture.shape.off).not.toHaveBeenCalled()
+    expect(fixture.guestFixture.off).not.toHaveBeenCalled()
     expect(browserManager.getGuestWebContentsId('legacy-page')).toBe(7)
   })
 })

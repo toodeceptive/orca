@@ -156,10 +156,10 @@ describe('DesktopBrowserViewService', () => {
   it('closes old views when the owning renderer reloads', async () => {
     const f = createDesktopBrowserViewServiceFixture()
     await f.service.create(f.sender, f.args)
-    f.senderShape.emit('did-start-navigation', { isMainFrame: true, isSameDocument: false })
+    f.senderFixture.emit('did-start-navigation', { isMainFrame: true, isSameDocument: false })
     await vi.waitFor(() => expect(f.guest.destroyed).toBe(true))
     expect(f.manager.getGuestWebContentsId(f.args.browserPageId)).toBeNull()
-    expect(f.senderShape.listenerCount('did-start-navigation')).toBe(0)
+    expect(f.senderFixture.listenerCount('did-start-navigation')).toBe(0)
   })
 
   it('retains failed owner cleanup for an explicit same-generation retry', async () => {

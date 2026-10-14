@@ -64,7 +64,7 @@ export function createOwnedViewFixture({ autoDestroy = true, visible = true } = 
   const webContents = guest as unknown as WebContents
   const state = { bounds: { x: 4, y: 40, width: 1152, height: 642 }, visible }
   const boundsHistory: Rectangle[] = []
-  const viewShape = {
+  const viewFixture = {
     webContents,
     getBounds: () => ({ ...state.bounds }),
     setBounds: (bounds: Rectangle) => {
@@ -77,7 +77,7 @@ export function createOwnedViewFixture({ autoDestroy = true, visible = true } = 
     }
   }
   // oxlint-disable-next-line typescript/consistent-type-assertions -- SAFETY: the lifecycle uses only the view's contents, bounds and visibility APIs supplied here.
-  const view = viewShape as unknown as WebContentsView
+  const view = viewFixture as unknown as WebContentsView
   const admission = new DesktopOwnedBrowserViewAdmission({
     isKnownPartition: () => 'persist:fixture',
     getSession: () => guest.session,
