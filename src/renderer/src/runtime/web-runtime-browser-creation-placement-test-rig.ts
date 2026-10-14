@@ -211,6 +211,7 @@ export function installRuntimeTransport(): ReturnType<typeof vi.fn> {
   )
   vi.stubGlobal('window', {
     api: {
+      browser: { notifyActiveTabChanged: vi.fn().mockResolvedValue(false) },
       runtimeEnvironments: {
         call,
         prepareBrowserClientHostPlacement: vi.fn().mockResolvedValue({ kind: 'server' })

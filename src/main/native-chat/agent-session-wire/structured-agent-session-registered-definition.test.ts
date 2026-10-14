@@ -121,7 +121,7 @@ describe('a registered definition', () => {
     expect(options.models.map((model) => model.id)).toEqual(['pilot-model'])
     // No pick for effort: the registered rules read the model's default.
     expect(options.current).toEqual({ model: 'pilot-model', effort: 'low' })
-    expect(options.threadGoal).toEqual({ current: null })
+    expect(options.threadGoal).toEqual({ current: null, canChangeBudget: false })
   })
 
   it('leaves an agent this runtime did not register with no rules, whatever the build ships', async () => {
