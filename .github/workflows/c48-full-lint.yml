@@ -52,3 +52,5 @@ jobs:
       - name: Record resulting tracked changes
         if: always()
         run: git status --short
+
+# Published through a normal authenticated Git push; retained API ref attempt: da537e9.
