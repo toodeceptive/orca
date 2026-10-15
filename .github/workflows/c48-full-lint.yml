@@ -1,0 +1,54 @@
+name: C48 full lint diagnostic
+run-name: C48 full lint of 77699053edbe478bf1e376cd1fa776713eaf864f
+
+on:
+  push:
+    branches: [pp/c48-full-lint-77699053]
+    paths: [.github/workflows/c48-full-lint.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  c48_full_lint:
+    name: C48 diagnostic full pnpm lint
+    if: github.repository == 'toodeceptive/orca'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    env:
+      ORCA_BACKGROUND_LAUNCH: '1'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          repository: toodeceptive/orca
+          ref: 77699053edbe478bf1e376cd1fa776713eaf864f
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Record exact source and runner
+        run: |
+          test "$(git rev-parse HEAD)" = 77699053edbe478bf1e376cd1fa776713eaf864f
+          git rev-parse HEAD HEAD^{tree}
+          uname -a
+          free -m
+          df -h .
+      - uses: ./.github/actions/install-node-dependencies
+        with:
+          native-runtime: node
+          node-version: '24'
+          cache-pnpm-store: 'false'
+          cache-pnpm-verification: 'false'
+          persist-native-cache: 'false'
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: config/.bun-version
+      - name: Record toolchain
+        run: |
+          node --version
+          pnpm --version
+          bun --version
+          git diff --exit-code
+      - name: Full pnpm lint
+        run: /usr/bin/time -v pnpm lint
+      - name: Record resulting tracked changes
+        if: always()
+        run: git status --short
