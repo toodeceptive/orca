@@ -60,6 +60,7 @@ export type BrowserTabInfo = {
   worktreeId?: string | null
   profileId?: string | null
   profileLabel?: string | null
+  captureBackend?: 'owned-view' | 'webview' | 'client' | 'unknown'
 }
 
 export type BrowserTabListResult = { tabs: BrowserTabInfo[] }

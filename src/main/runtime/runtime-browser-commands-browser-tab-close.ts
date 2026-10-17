@@ -184,7 +184,8 @@ export class RuntimeBrowserCommandsWithBrowserTabClose extends RuntimeBrowserCom
       ...tab,
       worktreeId: browserManager.getWorktreeIdForTab(tab.browserPageId) ?? null,
       profileId: profile.id,
-      profileLabel: profile.label
+      profileLabel: profile.label,
+      captureBackend: browserManager.getCaptureBackendForTab(tab.browserPageId)
     }
   }
 }

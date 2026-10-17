@@ -37,7 +37,8 @@ export class RuntimeBrowserCommandsWithListLogicalBrowserTabs extends RuntimeBro
         certificateFailure: null,
         worktreeId: page.workspaceId,
         profileId: profile.id,
-        profileLabel: profile.label
+        profileLabel: profile.label,
+        captureBackend: 'client' as const
       }
     })
     const tabs = [...serverTabs, ...clientTabs]

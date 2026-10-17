@@ -128,6 +128,35 @@ describe('RuntimeBrowserCommands client-hosted routing', () => {
     )
   })
 
+  it('labels client logical rows and preserves mixed ordering, errors and selection', async () => {
+    const { RuntimeBrowserCommands } = await import('./orca-runtime-browser')
+    const registry = new RuntimeBrowserPageRegistry()
+    publishClientPage(registry, { browserPageId: 'page-client' })
+    const commands = new RuntimeBrowserCommands(
+      createHost({ getRuntimeBrowserPageRegistry: () => registry })
+    )
+    const listed = await commands.browserTabList({ worktree: 'wt-1' })
+    expect(listed.tabs).toMatchObject([
+      { browserPageId: 'page-1', index: 0, active: false, captureBackend: 'unknown' },
+      {
+        browserPageId: 'page-client',
+        index: 1,
+        active: true,
+        captureBackend: 'client',
+        loadError: null,
+        certificateFailure: null,
+        profileId: 'default',
+        profileLabel: 'Default'
+      }
+    ])
+    expect((await commands.browserTabShow({ page: 'page-client', worktree: 'wt-1' })).tab).toEqual(
+      listed.tabs[1]
+    )
+    await expect(
+      commands.browserTabShow({ page: 'page-client', worktree: 'wt-other' })
+    ).rejects.toThrow('was not found in this worktree')
+  })
+
   it('creates an explicitly client-placed page without a server renderer or offscreen backend', async () => {
     const { RuntimeBrowserCommands } = await import('./orca-runtime-browser')
     const createClientPage = vi.fn(async () => ({
