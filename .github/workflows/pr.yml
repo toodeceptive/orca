@@ -2,6 +2,7 @@ name: PR Checks
 run-name: "PR ${{ github.event.pull_request.number }} | source ${{ github.sha }} | workflow ${{ github.workflow_sha }} | unit ${{ github.event.pull_request.draft && vars.ORCA_UNIT_SELECTION_MODE == 'selected' && 'selected' || 'full' }}"
 
 on:
+  workflow_dispatch:
   pull_request:
     types:
       - opened
@@ -10,13 +11,34 @@ on:
       - ready_for_review
 
 concurrency:
-  group: pr-checks-${{ github.event.pull_request.number }}
+  group: pr-checks-${{ github.event.pull_request.number || format('manual-{0}', github.ref) }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
+  manual_typecheck:
+    name: full typecheck (manual)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ORCA_BACKGROUND_LAUNCH: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/install-node-dependencies
+        with:
+          native-runtime: node
+          node-version: '24'
+
+      - name: Full typecheck
+        run: pnpm run typecheck
+
   # Why: a README/docs-only PR used to start the full matrix (test shards,
   # two package jobs, typecheck, git compat, xterm, shell contracts). Path
   # filters on `on.pull_request` would drop the `verify` check entirely; this
@@ -25,6 +47,7 @@ jobs:
   # inputs are unchanged; empty diffs fail closed and run everything.
   code_paths:
     name: detect changes and check repository guards
+    if: github.event_name == 'pull_request'
     # Reuse one lightweight checkout for detection and the always-required guards.
     runs-on: ubuntu-slim
     timeout-minutes: 5
@@ -1406,7 +1429,7 @@ jobs:
       ref: ${{ github.event.pull_request.head.sha }}
 
   verify:
-    if: ${{ !cancelled() }}
+    if: ${{ github.event_name == 'pull_request' && !cancelled() }}
     needs:
       - code_paths
       - preflight
