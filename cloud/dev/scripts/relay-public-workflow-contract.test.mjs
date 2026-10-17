@@ -20,7 +20,7 @@ const UNGATED = relayWorkflowFile('verify.yml')
 const relayWorkflows = () => workflowFiles().filter((file) => file !== UNGATED)
 
 test('the copy carries every relay workflow', () => {
-  assert.equal(relayWorkflows().length, 25)
+  assert.equal(relayWorkflows().length, 26)
 })
 
 // Why: workflow_run chains match by display name, not filename. Renaming a file is safe; renaming
@@ -58,7 +58,7 @@ test('no cloud workflow reads a repository secret', () => {
 test('every job that can start on its own is gated on the operations variable', () => {
   const reachable = []
   for (const file of relayWorkflows()) {
-    const text = readWorkflow(file)
+    const text = readWorkflow(file).replace(/\r\n/g, '\n')
     if (!isEntrypoint(text)) continue
     for (const job of jobs(text)) {
       if (jobNeeds(job.text).length > 0) continue
@@ -73,7 +73,7 @@ test('every job that can start on its own is gated on the operations variable', 
 // that reads as protection, and every caller is already checked above.
 test('reusable workflows carry no gate of their own', () => {
   for (const file of relayWorkflows()) {
-    const text = readWorkflow(file)
+    const text = readWorkflow(file).replace(/\r\n/g, '\n')
     if (isEntrypoint(text)) continue
     for (const job of jobs(text)) {
       assert.ok(!jobIf(job.text).includes(OPERATIONS_GATE), `${file}:${job.id} regates a reusable job`)

@@ -1,4 +1,5 @@
 import { webContents } from 'electron'
+import type { BrowserTabInfo } from '../../shared/runtime-browser-contracts'
 import type {
   BrowserCertificateFailure,
   BrowserLoadError
@@ -11,6 +12,26 @@ import { BrowserManagerRegistration } from './browser-manager-registration'
 export abstract class BrowserManagerQueries extends BrowserManagerRegistration {
   getGuestWebContentsId(browserTabId: string): number | null {
     return this.webContentsIdByTabId.get(browserTabId) ?? null
+  }
+
+  getCaptureBackendForTab(browserTabId: string): NonNullable<BrowserTabInfo['captureBackend']> {
+    const webContentsId = this.webContentsIdByTabId.get(browserTabId)
+    if (webContentsId === undefined) {
+      return 'unknown'
+    }
+    try {
+      const guest = webContents.fromId(webContentsId)
+      if (!guest || guest.id !== webContentsId || guest.isDestroyed()) {
+        return 'unknown'
+      }
+      if (this.isOwnedViewPage(browserTabId)) {
+        return 'owned-view'
+      }
+      return guest.getType() === 'webview' ? 'webview' : 'unknown'
+    } catch {
+      // Why: a guest can disappear while its retained tab metadata is still being listed.
+      return 'unknown'
+    }
   }
 
   getWebContentsIdByTabId(): Map<string, number> {

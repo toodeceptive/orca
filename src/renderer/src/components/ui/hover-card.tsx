@@ -5,6 +5,7 @@ import * as HoverCardPrimitive from 'radix-ui/hover-card'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
+import { useNativeViewOcclusionRef } from '@/hooks/useNativeViewOcclusion'
 
 function HoverCard({ ...props }: React.ComponentProps<typeof HoverCardPrimitive.Root>) {
   return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />
@@ -33,9 +34,11 @@ function HoverCardContent({
   ...props
 }: React.ComponentProps<typeof HoverCardPrimitive.Content> &
   VariantProps<typeof hoverCardContentVariants>) {
+  const occlusionRef = useNativeViewOcclusionRef<HTMLDivElement>()
   return (
     <HoverCardPrimitive.Portal data-slot="hover-card-portal">
       <HoverCardPrimitive.Content
+        ref={occlusionRef}
         data-slot="hover-card-content"
         align={align}
         sideOffset={sideOffset}

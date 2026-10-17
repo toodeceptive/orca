@@ -465,6 +465,7 @@ export const AGENT_SESSION_THREAD_GOAL_OBJECTIVE_MAX_LENGTH = 4000
 export type AgentSessionThreadGoalChange =
   | { kind: 'set'; objective: string }
   | { kind: 'status'; status: 'active' | 'paused' }
+  | { kind: 'budget'; tokenBudget: number }
   | { kind: 'clear' }
 
 export type AgentSessionThreadGoalResult = {
@@ -480,7 +481,11 @@ export type AgentSessionOptionsResult = {
    *  `agentSession.threadGoal` never offers the controls. `current` is the
    *  latest goal the whole journal records, for a client whose loaded page
    *  starts after it. */
-  threadGoal?: { current: AgentJournalThreadGoal | null; contextFloor?: AgentJournalCursor }
+  threadGoal?: {
+    current: AgentJournalThreadGoal | null
+    contextFloor?: AgentJournalCursor
+    canChangeBudget?: boolean
+  }
   /** Present only where this session writes context facts to its turn rows.
    *  `current` is the newest of each part the whole journal records, for a
    *  client whose loaded page starts after the row that carries it. */

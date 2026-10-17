@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 
-import { cleanup, render } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import type {
@@ -77,7 +77,7 @@ function sessionView(): React.JSX.Element {
 function showStripAndGoal(status: AgentJournalThreadGoal['status'] = 'active'): void {
   mocks.monitoringBackgroundTasks = true
   mocks.backgroundTasks = [{ id: 'task-agent', kind: 'agent' }]
-  mocks.threadGoal = { goal: goal(status), pending: false, change: vi.fn() }
+  mocks.threadGoal = { goal: goal(status), pending: false, change: vi.fn(), canChangeBudget: false }
 }
 
 describe('NativeChatStructuredSession task strip on the goal tab', () => {
@@ -86,6 +86,23 @@ describe('NativeChatStructuredSession task strip on the goal tab', () => {
     localStorage.clear()
     resetStructuredSessionMocks()
   })
+
+  it.each([undefined, false, true])(
+    'passes budget capability %s to the goal banner',
+    (canChangeBudget) => {
+      showStripAndGoal()
+      mocks.threadGoal = {
+        goal: goal('active'),
+        pending: false,
+        change: vi.fn(),
+        canChangeBudget: canChangeBudget === true
+      }
+      render(sessionView())
+      fireEvent.click(screen.getByRole('button', { name: 'Show full goal' }))
+      expect(screen.queryByLabelText('Total token budget') !== null).toBe(canChangeBudget === true)
+      expect(screen.getByRole('button', { name: 'Pause goal' })).toBeDefined()
+    }
+  )
 
   it('stacks the strip directly on the goal tab at the tab width, sharing one edge', () => {
     showStripAndGoal()

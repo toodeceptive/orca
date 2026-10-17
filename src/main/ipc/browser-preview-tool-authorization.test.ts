@@ -47,6 +47,7 @@ vi.mock('../browser/browser-manager', () => ({
     getGuestWebContentsId: vi.fn(),
     getWebContentsIdByTabId: vi.fn(() => new Map()),
     getWorktreeIdForTab: vi.fn(),
+    isOwnedViewPage: vi.fn(() => false),
     getAuthorizedGuest: getAuthorizedGuestMock,
     setGrabMode: setGrabModeMock,
     awaitGrabSelection: awaitGrabSelectionMock,
@@ -119,6 +120,12 @@ const TOOL_CHANNELS = [
 ]
 
 const BROWSER_PAGE_CHANNELS = [
+  'browser:desktop-view:create',
+  'browser:desktop-view:layout',
+  'browser:desktop-view:command',
+  'browser:desktop-view:input',
+  'browser:desktop-view:capture-viewport',
+  'browser:desktop-view:close',
   'browser:registerGuest',
   'browser:prepareSshWorkspacePartition',
   'browser:repairGuestRegistration',

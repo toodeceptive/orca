@@ -318,24 +318,28 @@ export const ConversationCommandParams = z
   })
   .strict()
 
-export const ThreadGoalParams = z
-  .object({
-    envelope: MutationEnvelope,
-    change: z.discriminatedUnion('kind', [
-      z
-        .object({
-          kind: z.literal('set'),
-          objective: z
-            .string()
-            .max(AGENT_SESSION_THREAD_GOAL_OBJECTIVE_MAX_LENGTH)
-            .refine((value) => value.trim().length > 0, 'Objective is empty')
-        })
-        .strict(),
-      z.object({ kind: z.literal('status'), status: z.enum(['active', 'paused']) }).strict(),
-      z.object({ kind: z.literal('clear') }).strict()
-    ])
-  })
-  .strict()
+export const ThreadGoalParams = z.strictObject({
+  envelope: MutationEnvelope,
+  change: z.discriminatedUnion('kind', [
+    z
+      .object({
+        kind: z.literal('set'),
+        objective: z
+          .string()
+          .max(AGENT_SESSION_THREAD_GOAL_OBJECTIVE_MAX_LENGTH)
+          .refine((value) => value.trim().length > 0, 'Objective is empty')
+      })
+      .strict(),
+    z.object({ kind: z.literal('status'), status: z.enum(['active', 'paused']) }).strict(),
+    z
+      .object({
+        kind: z.literal('budget'),
+        tokenBudget: z.number().int().positive().max(Number.MAX_SAFE_INTEGER)
+      })
+      .strict(),
+    z.object({ kind: z.literal('clear') }).strict()
+  ])
+})
 
 /** One surface's claim on one session. The id names the surface, not the client: two chat views
  *  looking at the same session are two holders, and either leaving must not release

@@ -2,6 +2,7 @@ import { vi, type Mock } from 'vitest'
 import { createCompatibleRuntimeStatusResponseIfNeeded } from '../../runtime/runtime-compatibility-test-fixture'
 
 export type StoreCascadesMockApi = {
+  browser: { notifyActiveTabChanged: Mock }
   worktrees: {
     list: Mock
     create: Mock
@@ -20,6 +21,7 @@ export type StoreCascadesMockApi = {
 /** window.api double shared by the store cascade suites; installs itself on globalThis. */
 export function createStoreCascadesMockApi(): StoreCascadesMockApi {
   const mockApi: StoreCascadesMockApi = {
+    browser: { notifyActiveTabChanged: vi.fn().mockResolvedValue(false) },
     worktrees: {
       list: vi.fn().mockResolvedValue([]),
       create: vi.fn().mockResolvedValue({}),

@@ -14,6 +14,7 @@ import type { StructuredAgentSessionMutate } from './use-structured-agent-sessio
 export type StructuredAgentSessionThreadGoal = {
   goal: AgentJournalThreadGoal | null
   pending: boolean
+  canChangeBudget: boolean
   /** Resolves false when the change was refused or not sent; the error surfaces separately. */
   change: (change: AgentSessionThreadGoalChange) => Promise<boolean>
 }
@@ -26,6 +27,7 @@ export function useStructuredAgentSessionThreadGoal(args: {
   mutate: StructuredAgentSessionMutate
 }): StructuredAgentSessionThreadGoal | null {
   const { journalItems, mutate, support, journalEpoch } = args
+  const canChangeBudget = support?.canChangeBudget === true
   const [pending, setPending] = useState(false)
   const pendingRef = useRef(false)
   // The loaded window reaches the live head, so a goal row in it is newer than the
@@ -41,7 +43,7 @@ export function useStructuredAgentSessionThreadGoal(args: {
   const goal = loaded === undefined ? (support?.current ?? null) : loaded
   const change = useCallback(
     async (next: AgentSessionThreadGoalChange): Promise<boolean> => {
-      if (pendingRef.current) {
+      if (pendingRef.current || (next.kind === 'budget' && !canChangeBudget)) {
         return false
       }
       pendingRef.current = true
@@ -58,7 +60,7 @@ export function useStructuredAgentSessionThreadGoal(args: {
         setPending(false)
       }
     },
-    [mutate]
+    [mutate, canChangeBudget]
   )
-  return support ? { goal, pending, change } : null
+  return support ? { goal, pending, canChangeBudget, change } : null
 }

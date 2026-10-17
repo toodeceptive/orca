@@ -6,6 +6,14 @@ function Assert-TestEqual($Actual, $Expected, [string]$Label) {
     }
 }
 
+function Assert-TestThrows([scriptblock]$Action, [string]$Prefix, [string]$Label) {
+    try { & $Action } catch {
+        if ($_.Exception.Message.StartsWith($Prefix)) { return }
+        throw "$Label received unexpected error: $($_.Exception.Message)"
+    }
+    throw "$Label did not reject the target"
+}
+
 Add-Type -TypeDefinition @"
 using System.Collections;
 using System.Collections.Generic;
@@ -133,6 +141,112 @@ try {
     $runtimeOutput = . (Join-Path $PSScriptRoot "runtime.ps1") -OperationPath $operationPath
     $handshake = $runtimeOutput | ConvertFrom-Json
     Assert-TestEqual $handshake.ok $true "runtime handshake"
+    $nativeRestoreWindow = ${function:Restore-OrcaWindow}
+    $nativeRootElement = ${function:Get-OrcaRootElement}
+
+    & {
+        $script:testProcesses = @([pscustomobject]@{
+            Id = 42; ProcessName = "chrome"; MainWindowHandle = 100; MainWindowTitle = "Primary"
+        })
+        $script:testWindows = @(
+            [pscustomobject]@{ Handle = 200; ProcessId = 42; Title = "Secondary"; IsMinimized = $true },
+            [pscustomobject]@{ Handle = 100; ProcessId = 42; Title = "Primary"; IsMinimized = $false }
+        )
+        function Get-OrcaProcessTable { $script:testProcesses }
+        function Get-OrcaNativeWindows { $script:testWindows }
+        $script:testStates = @{}
+        foreach ($window in $script:testWindows) { $script:testStates[[int64]$window.Handle] = $window }
+        $script:testCalls = New-Object 'System.Collections.Generic.List[string]'
+        function Get-OrcaNativeWindowState([int64]$Handle) { $script:testStates[$Handle] }
+        function Get-OrcaRootElement($Target) {
+            $script:testCalls.Add("root:$($Target.handle)")
+            $Target
+        }
+        function Get-OrcaWindowFrame($Target, $Root) {
+            $script:testCalls.Add("frame:$($Target.handle)")
+            New-OrcaFrame $Target.handle 20 300 400
+        }
+        function Restore-OrcaWindow($Target) {
+            $script:testCalls.Add("restore:$($Target.handle)")
+        }
+        function Render-OrcaTree($Root, $Frame, $Compact) {
+            $script:testCalls.Add("tree:$($Root.handle)")
+            [pscustomobject]@{ elements = @(); lines = @(); truncation = $null }
+        }
+        function Get-OrcaScreenshot($Include, $Frame) {
+            $script:testCalls.Add("screenshot:$($Frame.x)")
+            $null
+        }
+        function Find-OrcaElement($Root, $Record) { $null }
+        function Assert-OrcaKeyboardFocus($Handle, $Operation) {
+            $script:testCalls.Add("focus:$Handle")
+        }
+        function Send-OrcaText($Handle, $Text) {
+            $script:testCalls.Add("input:$Handle")
+            if ($script:testCloseOnInput) {
+                $script:testWindows = @($script:testWindows | Where-Object { $_.Handle -ne $Handle.ToInt64() })
+                $script:testStates.Remove($Handle.ToInt64())
+            }
+        }
+        $list = Get-OrcaWindowList "pid:42"
+        Assert-TestEqual $list.windows.Count 2 "two windows for one process"
+        Assert-TestEqual (($list.windows | ForEach-Object { $_.id }) -join "|") "100|200" "deterministic HWND ordering"
+        Assert-TestEqual (($list.windows | ForEach-Object { $_.index }) -join "|") "0|1" "per-process window indices"
+        Assert-TestEqual $list.windows[1].isMinimized $true "minimized secondary window"
+        Assert-TestEqual $list.windows[1].isOffscreen $true "minimized window offscreen status"
+        Assert-TestEqual (($script:testCalls) -join "|") "frame:100|frame:200" "window listing does not read UIA or restore"
+        Assert-TestEqual (@(Get-OrcaAppList).Count) 1 "app deduplication"
+        Assert-TestEqual (Find-OrcaProcess "Secondary").Id 42 "secondary title lookup"
+        Assert-TestEqual (Find-OrcaWindowTarget "pid:42" $null 1).handle 200 "window index selection"
+        Assert-TestEqual (Find-OrcaWindowTarget "pid:42" $null $null).handle 100 "default main window preference"
+        Assert-TestEqual (Find-OrcaWindowTarget "pid:42" 200 $null).handle 200 "secondary HWND selection"
+
+        $script:testCalls.Clear()
+        $snapshot = New-OrcaSnapshot "pid:42" $true 200 $null $true
+        Assert-TestEqual $snapshot.windowId 200 "snapshot selected HWND"
+        Assert-TestEqual $snapshot.windowTitle "Secondary" "snapshot selected title"
+        Assert-TestEqual $snapshot.windowIndex 1 "snapshot selected index"
+        Assert-TestEqual (($script:testCalls) -join "|") "restore:200|root:200|frame:200|tree:200|screenshot:200" "selected target read and restore propagation"
+
+        $operation = [pscustomobject]@{
+            tool = "type_text"; app = "pid:42"; windowId = 200; windowIndex = $null
+            restoreWindow = $true; noScreenshot = $true; text = "test"
+        }
+        $script:testCalls.Clear()
+        $script:testCloseOnInput = $false
+        $response = Invoke-OrcaOperation $operation
+        Assert-TestEqual $response.snapshot.windowId 200 "action follow-up selected HWND"
+        Assert-TestEqual (($script:testCalls) -join "|") "restore:200|root:200|frame:200|focus:200|input:200|root:200|frame:200|tree:200|screenshot:200" "selected target input propagation"
+
+        $script:testCalls.Clear()
+        Assert-TestThrows { New-OrcaSnapshot "pid:42" $false 999 $null $true } 'windowNotFound(' "foreign HWND"
+        Assert-TestThrows { New-OrcaSnapshot "pid:42" $false 200 0 $true } 'windowNotFound(' "inconsistent HWND and index"
+        Assert-TestThrows { New-OrcaSnapshot "pid:42" $false $null -1 $true } 'windowNotFound(' "negative index"
+        $script:testStates[200L] = [pscustomobject]@{ Handle = 200; ProcessId = 99; Title = "Foreign" }
+        Assert-TestThrows { New-OrcaSnapshot "pid:42" $false 200 $null $true } 'windowNotFound(' "reassigned HWND before restore"
+        $staleTarget = [pscustomobject]@{ process = $script:testProcesses[0]; handle = 200 }
+        Assert-TestThrows { & $nativeRestoreWindow $staleTarget } 'windowNotFound(' "native restore validates ownership"
+        Assert-TestThrows { & $nativeRootElement $staleTarget } 'windowNotFound(' "native UIA root validates ownership"
+        $script:testStates.Remove(200L)
+        Assert-TestThrows { Invoke-OrcaOperation $operation } 'windowNotFound(' "closed HWND before action"
+        Assert-TestEqual $script:testCalls.Count 0 "invalid targets rejected before reads, restore or input"
+
+        $script:testStates[200L] = $script:testWindows[0]
+        $script:testStates[200L].Title = "Bitwarden"
+        Assert-TestThrows { New-OrcaSnapshot "pid:42" $false 200 $null $true } 'appBlocked(' "blocked secondary title"
+        Assert-TestEqual $script:testCalls.Count 0 "blocked target rejected before restore"
+        $script:testStates[200L].Title = "Secondary"
+
+        $script:testProcesses[0].MainWindowHandle = 0
+        Assert-TestEqual (Find-OrcaWindowTarget "pid:42" $null $null).handle 100 "window owner without process main window"
+        $script:testCalls.Clear()
+        $script:testCloseOnInput = $true
+        $response = Invoke-OrcaOperation $operation
+        Assert-TestEqual ($null -eq $response.snapshot) $true "closed selected target has no replacement snapshot"
+        Assert-TestEqual $response.action.verification.reason "window_changed" "closed selected target invalidates cached window"
+        Assert-TestEqual (($script:testCalls) -join "|") "restore:200|root:200|frame:200|focus:200|input:200" "closed target never redirects to primary window"
+        Write-Output "windows-multiwindow-target-tests-ok"
+    }
 
     $counter = New-TestCounter
     $leaf = New-TestElement -Role "text" -Name "unused" -Counter $counter -RuntimeId 2

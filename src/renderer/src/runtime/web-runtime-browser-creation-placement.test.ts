@@ -264,6 +264,7 @@ describe('paired browser creation placement', () => {
     )
     vi.stubGlobal('window', {
       api: {
+        browser: { notifyActiveTabChanged: vi.fn().mockResolvedValue(false) },
         runtimeEnvironments: { call: runtimeCall, prepareBrowserClientHostPlacement: prepare }
       }
     })

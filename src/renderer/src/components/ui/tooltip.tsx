@@ -3,6 +3,7 @@ import * as TooltipPrimitive from 'radix-ui/tooltip'
 
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
+import { useNativeViewOcclusionRef } from '@/hooks/useNativeViewOcclusion'
 
 function TooltipProvider({
   delayDuration = 0,
@@ -50,9 +51,11 @@ function TooltipContent({
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content> &
   VariantProps<typeof tooltipContentVariants> & { showArrow?: boolean; onPlaced?: () => void }) {
+  const occlusionRef = useNativeViewOcclusionRef<HTMLDivElement>()
   return (
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
+        ref={occlusionRef}
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         // Why: tooltip portals can be triggered from inside menus/popovers.

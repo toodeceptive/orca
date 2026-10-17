@@ -116,7 +116,7 @@ describe('sendRemoteBrowserScreencastFrame', () => {
         sessionId: 42,
         metadata: {}
       })
-      await Promise.resolve()
+      await vi.advanceTimersByTimeAsync(0)
 
       expect(transport.onTransportError).not.toHaveBeenCalled()
       expect(transport.ws.close).not.toHaveBeenCalled()
@@ -132,7 +132,7 @@ describe('sendRemoteBrowserScreencastFrame', () => {
         sessionId: 43,
         metadata: {}
       })
-      await Promise.resolve()
+      await vi.advanceTimersByTimeAsync(0)
 
       expect(transport.onTransportError).not.toHaveBeenCalled()
       expect(webContents.debugger.sendCommand).toHaveBeenCalledWith('Page.screencastFrameAck', {

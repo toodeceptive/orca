@@ -118,6 +118,10 @@ function legacySalvageModule(): Record<string, unknown> {
   }
 
   return {
+    openEnum: <const T extends readonly string[], F extends T[number] | undefined>(
+      values: T,
+      fallback: F
+    ): z.ZodType<T[number] | F, unknown> => z.enum(values).or(z.string().transform(() => fallback)),
     collectSalvageDrops,
     salvagingArray,
     salvagingRecord,

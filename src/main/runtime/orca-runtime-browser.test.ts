@@ -138,6 +138,38 @@ describe('RuntimeBrowserCommands browser screencast', () => {
     browserSessionRegistryMock.createProfile.mockReset()
   })
 
+  it('projects the live manager backend through tab list and tab show', async () => {
+    const { RuntimeBrowserCommands } = await import('./orca-runtime-browser')
+    const { browserManager } = await import('../browser/browser-manager')
+    const commands = new RuntimeBrowserCommands(createHost())
+    browserManager.getWebContentsIdByTabId().set('page-1', 100)
+    webContentsFromIdMock.mockReturnValue({
+      id: 100,
+      isDestroyed: () => false,
+      getType: () => 'webview'
+    })
+    try {
+      const listed = await commands.browserTabList({ worktree: 'wt-1' })
+      expect(listed.tabs[0]).toMatchObject({
+        browserPageId: 'page-1',
+        index: 0,
+        active: true,
+        captureBackend: 'webview',
+        profileId: 'default',
+        profileLabel: 'Default'
+      })
+      const shown = await commands.browserTabShow({ page: 'page-1', worktree: 'wt-1' })
+      expect(shown.tab).toEqual(listed.tabs[0])
+      webContentsFromIdMock.mockReturnValue(null)
+      expect((await commands.browserTabList({ worktree: 'wt-1' })).tabs[0]).toMatchObject({
+        browserPageId: 'page-1',
+        captureBackend: 'unknown'
+      })
+    } finally {
+      browserManager.getWebContentsIdByTabId().delete('page-1')
+    }
+  })
+
   it('creates profiles with the requested scope and label', async () => {
     const { RuntimeBrowserCommands } = await import('./orca-runtime-browser')
     const profile = {

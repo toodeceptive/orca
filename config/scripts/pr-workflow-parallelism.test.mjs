@@ -63,11 +63,28 @@ describe('PR workflow parallelism', () => {
   })
 
   it('cancels superseded runs for the same pull request', () => {
-    expect(workflow.concurrency.group).toBe('pr-checks-${{ github.event.pull_request.number }}')
+    expect(workflow.concurrency.group).toBe(
+      "pr-checks-${{ github.event.pull_request.number || format('manual-{0}', github.ref) }}"
+    )
     expect(workflow.concurrency['cancel-in-progress']).toBe(true)
     expect(workflow.jobs.test.if).toContain('!cancelled()')
     expect(workflow.jobs.test.if).not.toContain('always()')
-    expect(workflow.jobs.verify.if).toBe('${{ !cancelled() }}')
+    expect(workflow.jobs.verify.if).toBe(
+      "${{ github.event_name == 'pull_request' && !cancelled() }}"
+    )
+    for (const [eventName, cancelled, expected] of [
+      ['pull_request', false, true],
+      ['pull_request', true, false],
+      ['workflow_dispatch', false, false],
+      ['workflow_dispatch', true, false]
+    ]) {
+      expect(
+        runInNewContext(workflow.jobs.verify.if.slice(3, -2), {
+          github: { event_name: eventName },
+          cancelled: () => cancelled
+        })
+      ).toBe(expected)
+    }
   })
 
   it('grants the PR workflow read-only repository access', () => {

@@ -42,6 +42,20 @@ describe('codex thread goal requests', () => {
     ])
   })
 
+  it('edits a budget without clear, objective replacement, status change or a new turn', async () => {
+    const change = { kind: 'budget' as const, tokenBudget: 40_000 }
+    const expected = {
+      method: 'thread/goal/set',
+      params: { threadId: THREAD, tokenBudget: 40_000, origin: 'user' }
+    }
+    expect(codexThreadGoalRequests(THREAD, change, true)).toEqual([expected])
+    const request = vi.fn(async () => ({ goal: { tokensUsed: 123, tokenBudget: 40_000 } }))
+    await expect(changeCodexThreadGoal(session(request), change, true, 5_000)).resolves.toEqual({
+      ok: true
+    })
+    expect(request.mock.calls).toEqual([[expected.method, expected.params, { timeoutMs: 5_000 }]])
+  })
+
   it('clears with only the thread id', () => {
     expect(codexThreadGoalRequests(THREAD, { kind: 'clear' }, true)).toEqual([
       { method: 'thread/goal/clear', params: { threadId: THREAD } }

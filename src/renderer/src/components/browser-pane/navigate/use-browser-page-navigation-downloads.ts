@@ -21,6 +21,7 @@ import {
   readWorkspaceFileDragSource,
   WORKSPACE_FILE_PATH_MIME
 } from '@/lib/workspace-file-drag'
+import type { BrowserPageSurface } from '../host-guest/browser-page-surface'
 import type { BrowserLoadError } from '../../../../../shared/browser-workspace-types'
 import { resolveBrowserAddressBarSubmission } from './browser-address-bar-navigation'
 import { navigateBrowserPageToUrl } from './navigate-browser-page-url'
@@ -37,6 +38,8 @@ export function useBrowserPageNavigationDownloads({
   browserTabId,
   worktreeId,
   webviewRef,
+  surface,
+  retryGuestRecoveryRef,
   activeLoadFailureRef,
   lastKnownWebviewUrlRef,
   trackNextLoadingEventRef,
@@ -53,6 +56,8 @@ export function useBrowserPageNavigationDownloads({
   browserTabId: string
   worktreeId: string
   webviewRef: MutableRefObject<Electron.WebviewTag | null>
+  surface?: BrowserPageSurface
+  retryGuestRecoveryRef?: MutableRefObject<() => void>
   activeLoadFailureRef: MutableRefObject<BrowserLoadError | null>
   lastKnownWebviewUrlRef: MutableRefObject<string | null>
   trackNextLoadingEventRef: MutableRefObject<boolean>
@@ -108,6 +113,8 @@ export function useBrowserPageNavigationDownloads({
         trackNextLoadingEventRef,
         recoveryNavigationValidationRef,
         webviewRef,
+        surface,
+        retryGuestRecoveryRef,
         onSetUrlRef,
         onUpdatePageStateRef,
         setAddressBarValue,
@@ -126,6 +133,8 @@ export function useBrowserPageNavigationDownloads({
       setResourceNotice,
       trackNextLoadingEventRef,
       webviewRef,
+      surface,
+      retryGuestRecoveryRef,
       worktreeId
     ]
   )
@@ -191,8 +200,8 @@ export function useBrowserPageNavigationDownloads({
       }
 
       const webview = webviewRef.current
-      const rect = webview?.getBoundingClientRect()
-      if (!webview || !rect) {
+      const rect = surface?.getBounds() ?? webview?.getBoundingClientRect()
+      if (!rect) {
         setResourceNotice(
           translate(
             'auto.components.browser.pane.navigate.use.browser.page.navigation.downloads.8683b84b9e',
@@ -215,7 +224,7 @@ export function useBrowserPageNavigationDownloads({
 
       navigateToUrl(target.url)
     },
-    [navigateToUrl, setResourceNotice, webviewRef, worktreeId]
+    [navigateToUrl, setResourceNotice, surface, webviewRef, worktreeId]
   )
 
   useLayoutEffect(() => {

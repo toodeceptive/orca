@@ -22,6 +22,7 @@ vi.mock('@/lib/agent-status', async (importOriginal) => {
 })
 
 const mockApi = {
+  browser: { notifyActiveTabChanged: vi.fn().mockResolvedValue(false) },
   worktrees: {
     list: vi.fn().mockResolvedValue([]),
     remove: vi.fn().mockResolvedValue(undefined),
